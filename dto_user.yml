@@ -1,0 +1,15 @@
+---
+- name: Manage remote Debian client
+  hosts: debian
+  become: true
+  tasks:
+    - name: Ensure dto user exists with sudo privileges
+      ansible.builtin.user:
+        name: dto
+        groups: sudo
+        append: true
+        create_home: true
+        password: "{{ 'dto' | password_hash('sha512') }}"
+    - name: Force dto to change password on first login
+      ansible.builtin.command:
+        cmd: chage -d 0 dto
