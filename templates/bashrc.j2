@@ -1,0 +1,11 @@
+# .bashrc for dto user (Ansible managed)
+# If not running interactively, exit
+case $- in
+    *i*) ;;
+      *) return;;
+esac
+
+# Colourful prompt with host IP, username, and current directory
+IP="\$(hostname -I | awk '{print \$1}')"
+PS1="\[\e[36m\]\${IP}\[\e[0m\] \[\e[32m\]\u\[\e[0m\] \[\e[34m\]\w\[\e[0m\]\$ "
+
