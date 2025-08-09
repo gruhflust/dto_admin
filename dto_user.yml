@@ -1,7 +1,6 @@
 ---
 - name: Manage remote Debian client
   hosts: debian
-  become: true
   tasks:
     - name: Ensure dto user exists with sudo privileges
       ansible.builtin.user:
