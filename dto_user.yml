@@ -49,17 +49,17 @@
       failed_when: false
       changed_when: false
 
-- name: "06 Ensure ironscope user exists with admin privileges"
-  ansible.builtin.user:
-    name: ironscope
-    groups: "{{ admin_group }}"
-    append: true
-    create_home: true
-    password: "{{ 'iron' | password_hash('sha512') }}"
-    shell: /bin/bash
-    password_expired: true   # anstelle von 'password_expire'
-    update_password: on_create
-  when: ironscope_user_check.rc != 0
+    - name: "06 Ensure ironscope user exists with admin privileges"
+      ansible.builtin.user:
+        name: ironscope
+        groups: "{{ admin_group }}"
+        append: true
+        create_home: true
+        password: "{{ 'iron' | password_hash('sha512') }}"
+        shell: /bin/bash
+        password_expired: true   # anstelle von 'password_expire'
+        update_password: on_create
+      when: ironscope_user_check.rc != 0
 
     - name: "07 Mark that ironscope user is available"
       ansible.builtin.set_fact:
