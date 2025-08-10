@@ -1,20 +1,25 @@
 # dto_admin
-Hier werden Playbooks gesammelt, die einen Remote Client manipulieren können.
-Zuerst möchte ich einen Client remote updaten und den user "ironscope" anlegen.
 
-## Verwendung
+This repository collects Ansible playbooks that can manipulate a remote client.
+Currently it provides a playbook to update a client and create the user "ironscope".
 
-Das Inventory `inventory/hosts.ini` beinhaltet den Zielhost `192.168.188.121` und nutzt den Benutzer `root` für die Verbindung.
+## Usage
 
-Das Playbook `dto_user.yml` legt den Benutzer `ironscope` an, erstellt ein Homeverzeichnis,
-fügt ihn der Gruppe `sudo` hinzu und erzwingt eine Passwortänderung beim ersten Login.
-Zunächst wird das System des Zielhosts aktualisiert. Anschließend installiert das Playbook das Paket `rclone`,
-legt im Homeverzeichnis den Ordner `onedrive` an und setzt `/bin/bash` als Standardshell.
-Abschließend installiert es eine farbige Prompt, die IP-Adresse, Benutzername und aktuelles Verzeichnis
-in unterschiedlichen Farben anzeigt.
+The inventory `inventory/hosts.ini` contains the target host `192.168.188.121` and uses the user `root` for the connection.
 
-Playbook ausführen:
+The playbook `dto_user.yml` ensures that the user `ironscope` exists, creates a home directory,
+adds the user to the `sudo` group and forces a password change at the first login.
+It then updates the target host system, installs the package `rclone`,
+creates the directory `onedrive` in the home directory and sets `/bin/bash` as the default shell.
+Finally, it installs a colorful prompt that displays IP address, username and current directory
+in different colors.
+
+Run the playbook:
 
 ```bash
 ansible-playbook -i inventory/hosts.ini dto_user.yml
 ```
+
+## Versioning
+
+Current version: 0.1.0-beta. A stable 1.0.0 release will be defined in the future.
