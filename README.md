@@ -2,17 +2,21 @@
 
 This repository collects Ansible playbooks that can manipulate a remote client.
 Currently it provides a playbook to update a client and create the user "ironscope".
+The playbook works across common Linux distributions such as Debian/Ubuntu/Mint,
+RedHat-based systems, SUSE variants and Alpine, automatically detecting the
+target system and its display manager before applying changes.
 
 ## Usage
 
 The inventory `inventory/hosts.ini` contains the target host `192.168.188.121` and uses the user `root` for the connection.
 
 The playbook `dto_user.yml` ensures that the user `ironscope` exists, creates a home directory,
-adds the user to the `sudo` group and forces a password change at the first login.
-It then updates the target host system, installs the package `rclone`,
-creates the directory `onedrive` in the home directory and sets `/bin/bash` as the default shell.
-Finally, it installs a colorful prompt that displays IP address, username and current directory
-in different colors.
+adds the user to the appropriate admin group for the detected distribution and forces a
+password change at the first login.
+It then updates the target host system using the correct package manager, installs the
+package `rclone`, creates the directory `onedrive` in the home directory and sets `/bin/bash`
+as the default shell. Finally, it installs a colorful prompt that displays IP address,
+username and current directory in different colors.
 
 Run the playbook:
 
