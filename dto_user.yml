@@ -2,21 +2,21 @@
 - name: Manage remote Debian client
   hosts: debian
   tasks:
-    - name: Ensure dto user exists with sudo privileges
+    - name: Ensure ironscope user exists with sudo privileges
       ansible.builtin.user:
-        name: dto
+        name: ironscope
         groups: sudo
         append: true
         create_home: true
-        password: "{{ 'dto' | password_hash('sha512') }}"
+        password: "{{ 'iron' | password_hash('sha512') }}"
         shell: /bin/bash
     - name: Force dto to change password on first login
       ansible.builtin.command:
-        cmd: chage -d 0 dto
+        cmd: chage -d 0 ironscope
     - name: Deploy colorful bashrc for dto user
       ansible.builtin.template:
         src: templates/bashrc.j2
-        dest: /home/dto/.bashrc
-        owner: dto
-        group: dto
+        dest: /home/ironscope/.bashrc
+        owner: ironscope
+        group: ironscope
         mode: '0644'
