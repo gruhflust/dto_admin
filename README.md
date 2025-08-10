@@ -8,9 +8,10 @@ Das Inventory `inventory/hosts.ini` beinhaltet den Zielhost `192.168.188.121` un
 
 Das Playbook `dto_user.yml` legt den Benutzer `ironscope` an, erstellt ein Homeverzeichnis,
 fügt ihn der Gruppe `sudo` hinzu und erzwingt eine Passwortänderung beim ersten Login.
-Zusätzlich installiert es das Paket `rclone`, legt im Homeverzeichnis den Ordner `onedrive` an
-und setzt `/bin/bash` als Standardshell. Abschließend installiert es eine farbige Prompt,
-die IP-Adresse, Benutzername und aktuelles Verzeichnis in unterschiedlichen Farben anzeigt.
+Zunächst wird das System des Zielhosts aktualisiert. Anschließend installiert das Playbook das Paket `rclone`,
+legt im Homeverzeichnis den Ordner `onedrive` an und setzt `/bin/bash` als Standardshell.
+Abschließend installiert es eine farbige Prompt, die IP-Adresse, Benutzername und aktuelles Verzeichnis
+in unterschiedlichen Farben anzeigt.
 
 Playbook ausführen:
 
