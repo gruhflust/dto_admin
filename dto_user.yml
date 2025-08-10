@@ -10,10 +10,10 @@
         create_home: true
         password: "{{ 'iron' | password_hash('sha512') }}"
         shell: /bin/bash
-    - name: Force dto to change password on first login
+    - name: Force ironscope to change password on first login
       ansible.builtin.command:
         cmd: chage -d 0 ironscope
-    - name: Deploy colorful bashrc for dto user
+    - name: Deploy colorful bashrc for ironscope user
       ansible.builtin.template:
         src: templates/bashrc.j2
         dest: /home/ironscope/.bashrc

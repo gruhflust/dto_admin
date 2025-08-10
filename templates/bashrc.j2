@@ -1,4 +1,4 @@
-# .bashrc for dto user (Ansible managed)
+# .bashrc for ironscope user (Ansible managed)
 # If not running interactively, exit
 case $- in
     *i*) ;;
@@ -7,4 +7,4 @@ esac
 # Ensure prompt variables are expanded
 shopt -s promptvars
 # Colourful prompt with host IP, username, and current directory
-PS1='\\[\\e[36m\\]$(hostname -I | cut -d" " -f1)\\[\\e[0m\\] \\[\\e[32m\\]\\u\\[\\e[0m\\] \\[\\e[34m\\]\\w\\[\\e[0m\\]\\$ '
+PS1='\[\e[36m\]$(hostname -I | cut -d" " -f1)\[\e[0m\] \[\e[32m\]\u\[\e[0m\] \[\e[34m\]\w\[\e[0m\]\$ '
