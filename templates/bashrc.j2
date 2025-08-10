@@ -4,6 +4,7 @@ case $- in
     *i*) ;;
       *) return;;
 esac
+# Ensure prompt variables are expanded
+shopt -s promptvars
 # Colourful prompt with host IP, username, and current directory
-IP="$(hostname -I | awk '{print $1}')"
-PS1="\[\e[36m\]${IP}\[\e[0m\] \[\e[32m\]\u\[\e[0m\] \[\e[34m\]\w\[\e[0m\]\$ "
+PS1='\\[\\e[36m\\]$(hostname -I | cut -d" " -f1)\\[\\e[0m\\] \\[\\e[32m\\]\\u\\[\\e[0m\\] \\[\\e[34m\\]\\w\\[\\e[0m\\]\\$ '
