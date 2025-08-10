@@ -13,6 +13,18 @@
     - name: Force ironscope to change password on first login
       ansible.builtin.command:
         cmd: chage -d 0 ironscope
+    - name: Install rclone
+      ansible.builtin.apt:
+        name: rclone
+        state: present
+        update_cache: true
+    - name: Create onedrive directory for ironscope
+      ansible.builtin.file:
+        path: /home/ironscope/onedrive
+        state: directory
+        owner: ironscope
+        group: ironscope
+        mode: '0755'
     - name: Deploy colorful bashrc for ironscope user
       ansible.builtin.template:
         src: templates/bashrc.j2
