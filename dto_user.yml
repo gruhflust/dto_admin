@@ -57,9 +57,13 @@
         create_home: true
         password: "{{ 'iron' | password_hash('sha512') }}"
         shell: /bin/bash
-        password_expired: true   # anstelle von 'password_expire'
         update_password: on_create
       when: ironscope_user_check.rc != 0
+      register: created_ironscope_user
+
+    - name: "06b Force ironscope to reset password on first login"
+      ansible.builtin.command: passwd -e ironscope
+      when: created_ironscope_user is defined and created_ironscope_user.changed
 
     - name: "07 Mark that ironscope user is available"
       ansible.builtin.set_fact:
