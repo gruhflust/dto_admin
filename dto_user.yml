@@ -17,13 +17,16 @@
       Ubuntu: sudo
   tasks:
     - name: "01 Set admin group based on distribution"
+      # ansible.builtin.set_fact: set variables dynamically during a play
       ansible.builtin.set_fact:
         admin_group: "{{ admin_group_map[ansible_distribution] | default('sudo') }}"
 
     - name: "02 Gather service facts"
+      # ansible.builtin.service_facts: gather information about services
       ansible.builtin.service_facts:
 
     - name: "03 Detect display manager"
+      # ansible.builtin.set_fact (see task 01)
       ansible.builtin.set_fact:
         display_manager: >-
           {% set svc = ansible_facts.services %}
@@ -40,138 +43,156 @@
           {% endif %}
 
     - name: "04 Debug system information"
+      # ansible.builtin.debug: print statements for debugging
       ansible.builtin.debug:
         msg: "Distribution: {{ ansible_distribution }} {{ ansible_distribution_version }}, Display Manager: {{ display_manager }}"
 
     - name: "05 Check if ironscope user already exists"
+      # ansible.builtin.command: run a command on the remote host
       ansible.builtin.command: id -u ironscope
-      register: ironscope_user_check
-      failed_when: false
-      changed_when: false
+      register: ironscope_user_check        # register: store command result for later use
+      failed_when: false                    # failed_when: override failure criteria
+      changed_when: false                   # changed_when: control change reporting
 
     - name: "06 Ensure ironscope user exists with admin privileges"
+      # ansible.builtin.user: manage user accounts
       ansible.builtin.user:
-        name: ironscope
-        groups: "{{ admin_group }}"
-        append: true
-        create_home: true
-        password: "{{ 'iron' | password_hash('sha512') }}"
-        shell: /bin/bash
-        update_password: on_create
-      when: ironscope_user_check.rc != 0
-      register: created_ironscope_user
+        name: ironscope                     # name: account to manage
+        groups: "{{ admin_group }}"         # groups: supplementary groups
+        append: true                        # append: add to existing groups
+        create_home: true                   # create_home: ensure home directory exists
+        password: "{{ 'iron' | password_hash('sha512') }}"  # password: hashed password for the account
+        shell: /bin/bash                    # shell: default shell
+        update_password: on_create          # update_password: change only on creation
+      when: ironscope_user_check.rc != 0    # when: condition to execute the task
+      register: created_ironscope_user      # register (see task 05)
 
     - name: "06b Force ironscope to reset password on first login"
+      # ansible.builtin.command (see task 05)
       ansible.builtin.command: passwd -e ironscope
-      when: created_ironscope_user is defined and created_ironscope_user.changed
+      when: created_ironscope_user is defined and created_ironscope_user.changed  # when (see task 06)
 
     - name: "07 Mark that ironscope user is available"
+      # ansible.builtin.set_fact (see task 01)
       ansible.builtin.set_fact:
         ironscope_user_exists: "{{ (created_ironscope_user is defined and created_ironscope_user.changed) or (ironscope_user_check.rc == 0) }}"
 
     - name: "08 Update system packages"
-      block:
+      block:  # block: group related tasks under shared directives
         - name: "08a Update Debian-based systems"
+          # ansible.builtin.apt: manage Debian packages
           ansible.builtin.apt:
-            update_cache: true
-            upgrade: dist
-          when: ansible_os_family == 'Debian'
+            update_cache: true             # update_cache: refresh package metadata
+            upgrade: dist                  # upgrade: type of upgrade to perform
+          when: ansible_os_family == 'Debian'  # when (see task 06)
 
         - name: "08b Update RedHat-based systems"
+          # ansible.builtin.yum: manage RedHat packages
           ansible.builtin.yum:
-            name: '*'
-            state: latest
-          when: ansible_os_family == 'RedHat'
+            name: '*'                      # name: package to manage
+            state: latest                  # state: desired package state
+          when: ansible_os_family == 'RedHat'  # when (see task 06)
 
         - name: "08c Update SUSE-based systems"
+          # ansible.builtin.zypper: manage SUSE packages
           ansible.builtin.zypper:
-            name: '*'
-            state: latest
-            update_cache: true
-          when: ansible_os_family == 'Suse'
+            name: '*'                      # name (see task 08b)
+            state: latest                  # state (see task 08b)
+            update_cache: true             # update_cache (see task 08a)
+          when: ansible_os_family == 'Suse'    # when (see task 06)
 
         - name: "08d Update Alpine-based systems"
+          # community.general.apk: manage Alpine packages
           community.general.apk:
-            update_cache: true
-            upgrade: yes
-          when: ansible_os_family == 'Alpine'
+            update_cache: true             # update_cache (see task 08a)
+            upgrade: yes                   # upgrade (see task 08a)
+          when: ansible_os_family == 'Alpine'  # when (see task 06)
 
     - name: "09 Check if rclone is installed"
+      # ansible.builtin.stat: retrieve file or path status
       ansible.builtin.stat:
-        path: /usr/bin/rclone
-      register: rclone_binary
+        path: /usr/bin/rclone             # path: target file to inspect
+      register: rclone_binary             # register (see task 05)
 
     - name: "10 Install rclone"
-      block:
+      block:  # block (see task 08)
         - name: "10a Install rclone on Debian-based systems"
+          # ansible.builtin.apt (see task 08a)
           ansible.builtin.apt:
-            name: rclone
-            state: present
-            update_cache: true
+            name: rclone                  # name: package to install
+            state: present                # state: ensure package is installed
+            update_cache: true            # update_cache (see task 08a)
           when:
-            - ansible_os_family == 'Debian'
+            - ansible_os_family == 'Debian'   # when (see task 06)
             - not rclone_binary.stat.exists
 
         - name: "10b Install rclone on RedHat-based systems"
+          # ansible.builtin.yum (see task 08b)
           ansible.builtin.yum:
-            name: rclone
-            state: present
+            name: rclone                  # name (see task 08b)
+            state: present                # state (see task 08b)
           when:
-            - ansible_os_family == 'RedHat'
+            - ansible_os_family == 'RedHat'   # when (see task 06)
             - not rclone_binary.stat.exists
 
         - name: "10c Install rclone on SUSE-based systems"
+          # ansible.builtin.zypper (see task 08c)
           ansible.builtin.zypper:
-            name: rclone
-            state: present
-            update_cache: true
+            name: rclone                  # name (see task 08b)
+            state: present                # state (see task 08b)
+            update_cache: true            # update_cache (see task 08a)
           when:
-            - ansible_os_family == 'Suse'
+            - ansible_os_family == 'Suse'     # when (see task 06)
             - not rclone_binary.stat.exists
 
         - name: "10d Install rclone on Alpine-based systems"
+          # community.general.apk (see task 08d)
           community.general.apk:
-            name: rclone
-            state: present
-            update_cache: true
+            name: rclone                  # name (see task 08b)
+            state: present                # state (see task 08b)
+            update_cache: true            # update_cache (see task 08a)
           when:
-            - ansible_os_family == 'Alpine'
+            - ansible_os_family == 'Alpine'   # when (see task 06)
             - not rclone_binary.stat.exists
 
     - name: "11 Check if onedrive directory exists"
+      # ansible.builtin.stat (see task 09)
       ansible.builtin.stat:
-        path: /home/ironscope/onedrive
-      register: onedrive_dir
-      become: true
-      become_user: ironscope
-      failed_when: false
-      changed_when: false
-      when: ironscope_user_exists
+        path: /home/ironscope/onedrive   # path (see task 09)
+      register: onedrive_dir             # register (see task 05)
+      become: true                       # become: run task with privilege escalation
+      become_user: ironscope             # become_user: user to become
+      failed_when: false                 # failed_when (see task 05)
+      changed_when: false                # changed_when (see task 05)
+      when: ironscope_user_exists        # when (see task 06)
 
     - name: "12 Create onedrive directory for ironscope"
+      # ansible.builtin.file: manage file and directory properties
       ansible.builtin.file:
-        path: /home/ironscope/onedrive
-        state: directory
-        owner: ironscope
-        group: ironscope
-        mode: '0755'
+        path: /home/ironscope/onedrive   # path (see task 09)
+        state: directory                 # state: file system object type
+        owner: ironscope                 # owner: user that owns the path
+        group: ironscope                 # group: group that owns the path
+        mode: '0755'                     # mode: permissions of the path
       when:
-        - ironscope_user_exists
+        - ironscope_user_exists          # when (see task 06)
         - not onedrive_dir.stat.exists
 
     - name: "13 Check if ironscope bashrc exists"
+      # ansible.builtin.stat (see task 09)
       ansible.builtin.stat:
-        path: /home/ironscope/.bashrc
-      register: ironscope_bashrc
-      when: ironscope_user_exists
+        path: /home/ironscope/.bashrc   # path (see task 09)
+      register: ironscope_bashrc        # register (see task 05)
+      when: ironscope_user_exists       # when (see task 06)
 
     - name: "14 Deploy colorful bashrc for ironscope user"
+      # ansible.builtin.template: generate file from Jinja2 template
       ansible.builtin.template:
-        src: templates/bashrc.j2
-        dest: /home/ironscope/.bashrc
-        owner: ironscope
-        group: ironscope
-        mode: '0644'
+        src: templates/bashrc.j2        # src: template file
+        dest: /home/ironscope/.bashrc   # dest: target file
+        owner: ironscope                # owner (see task 12)
+        group: ironscope                # group (see task 12)
+        mode: '0644'                    # mode (see task 12)
       when:
-        - ironscope_user_exists
+        - ironscope_user_exists         # when (see task 06)
         - not ironscope_bashrc.stat.exists
