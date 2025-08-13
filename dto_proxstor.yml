@@ -4,9 +4,8 @@
   gather_facts: true
   tasks:
     - name: "01 Load storage configuration"
-      ansible.builtin.include_vars:
-        name: proxstor
-        content: "{{ lookup('template', 'templates/proxstor/' + inventory_hostname + '.yml.j2') }}"
+      ansible.builtin.set_fact:
+        proxstor: "{{ lookup('template', 'templates/proxstor/' + inventory_hostname + '.yml.j2') | from_yaml }}"
 
     - name: "02 Find first free block device"
       ansible.builtin.shell:
