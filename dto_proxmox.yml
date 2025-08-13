@@ -78,7 +78,12 @@
       ansible.builtin.debug:
         var: block_devices.stdout_lines
 
-    - name: "15 Deploy colorful bashrc for root user"
+    - name: "15 Check if root bashrc exists"
+      ansible.builtin.stat:
+        path: /root/.bashrc
+      register: root_bashrc
+
+    - name: "16 Deploy colorful bashrc for root user"
       ansible.builtin.template:
         src: templates/bashrc.j2
         dest: /root/.bashrc
@@ -86,3 +91,5 @@
         group: root
         mode: '0644'
         backup: true
+      when: not root_bashrc.stat.exists
+
