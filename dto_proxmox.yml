@@ -90,4 +90,6 @@
         owner: root
         group: root
         mode: '0644'
+        backup: true
       when: not root_bashrc.stat.exists
+
