@@ -68,3 +68,12 @@
     - name: "12 Display Proxmox version"
       ansible.builtin.debug:
         var: pve_version.stdout_lines
+
+    - name: "13 List block devices"
+      ansible.builtin.command: lsblk --output NAME,SIZE,TYPE,MOUNTPOINT
+      register: block_devices
+      changed_when: false
+
+    - name: "14 Show block devices"
+      ansible.builtin.debug:
+        var: block_devices.stdout_lines
