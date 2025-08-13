@@ -7,38 +7,63 @@
       ansible.builtin.set_fact:
         proxstor: "{{ lookup('template', 'templates/proxstor/' + inventory_hostname + '.yml.j2') | from_yaml }}"
 
-    - name: "02 Remove thin volumes"
+    - name: "02 Remove Proxmox storage configuration"
+      ansible.builtin.blockinfile:
+        path: /etc/pve/storage.cfg
+        marker: "# {mark} ANSIBLE MANAGED proxstor"
+        block: |
+          lvmthin: {{ proxstor.storage_name }}
+              thinpool {{ proxstor.thinpool_name }}
+              vgname {{ proxstor.vg_name }}
+              content rootdir,images
+        state: absent
+      notify:
+        - Restart pvedaemon
+        - Restart pveproxy
+
+    - name: "03 Remove thin volumes"
       ansible.builtin.lvol:
         vg: "{{ proxstor.vg_name }}"
         lv: "{{ item }}"
         state: absent
       loop: "{{ proxstor.thin_volumes }}"
 
-    - name: "03 Remove thin pool"
+    - name: "04 Remove thin pool"
       ansible.builtin.lvol:
         vg: "{{ proxstor.vg_name }}"
         thinpool: "{{ proxstor.thinpool_name }}"
         state: absent
 
-    - name: "04 Remove volume group"
+    - name: "05 Remove volume group"
       ansible.builtin.lvg:
         vg: "{{ proxstor.vg_name }}"
         state: absent
 
-    - name: "05 List logical volumes"
+    - name: "06 List logical volumes"
       ansible.builtin.command: lvs --units g
       register: lvs_output
       changed_when: false
 
-    - name: "06 Show logical volumes"
+    - name: "07 Show logical volumes"
       ansible.builtin.debug:
         var: lvs_output.stdout_lines
 
-    - name: "07 List storages"
+    - name: "08 List storages"
       ansible.builtin.command: pvesm status
       register: storage_status
       changed_when: false
 
-    - name: "08 Show storages"
+    - name: "09 Show storages"
       ansible.builtin.debug:
         var: storage_status.stdout_lines
+
+  handlers:
+    - name: Restart pvedaemon
+      ansible.builtin.service:
+        name: pvedaemon
+        state: restarted
+
+    - name: Restart pveproxy
+      ansible.builtin.service:
+        name: pveproxy
+        state: restarted
