@@ -9,6 +9,6 @@ shopt -s promptvars
 # Colourful prompt with host IP, username, and current directory
 PS1='\[\e[36m\]$(hostname -I | cut -d" " -f1)\[\e[0m\] \[\e[32m\]\u\[\e[0m\] \[\e[34m\]\w\[\e[0m\]\$ '
 
-# Convenience aliases for running Ansible playbooks
-alias admin='ansible-playbook -i inventory/hosts.ini dto_user.yml'
-alias prox='ansible-playbook -i inventory/hosts.ini dto_proxmox.yml'
+# Convenience aliases for running Ansible playbooks with coloured YAML output
+alias admin='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml ANSIBLE_CALLBACKS_ENABLED=profile_tasks ansible-playbook -i inventory/hosts.ini dto_user.yml'
+alias prox='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml ANSIBLE_CALLBACKS_ENABLED=profile_tasks ansible-playbook -i inventory/hosts.ini dto_proxmox.yml'
