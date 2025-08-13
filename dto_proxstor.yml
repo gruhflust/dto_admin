@@ -4,26 +4,31 @@
   gather_facts: true
   tasks:
     - name: "01 Load storage configuration"
-      ansible.builtin.include_vars:
-        name: proxstor
-        content: "{{ lookup('template', 'templates/proxstor/' + inventory_hostname + '.yml.j2') }}"
+      ansible.builtin.set_fact:
+        proxstor: "{{ lookup('template', 'templates/proxstor/' + inventory_hostname + '.yml.j2') | from_yaml }}"
 
     - name: "02 Find first free block device"
-      ansible.builtin.shell:
-        cmd: lsblk -ndo NAME,TYPE,FSTYPE | awk '$2=="disk" && $3=="" {print "/dev/"$1; exit}'
-      register: free_device
+      ansible.builtin.set_fact:
+        free_device: >-
+          {{ ansible_devices
+             | dict2items
+             | selectattr('value.partitions', 'equalto', {})
+             | map(attribute='key')
+             | sort
+             | map('regex_replace', '^', '/dev/')
+             | first | default('') }}
       changed_when: false
 
     - name: "03 Assert free block device exists"
       ansible.builtin.assert:
         that:
-          - free_device.stdout != ''
+          - free_device | length > 0
         fail_msg: "No unused block device found."
 
     - name: "04 Create volume group"
       ansible.builtin.lvg:
         vg: "{{ proxstor.vg_name }}"
-        pvs: "{{ free_device.stdout }}"
+        pvs: "{{ free_device }}"
 
     - name: "05 Create thin pool"
       ansible.builtin.lvol:
