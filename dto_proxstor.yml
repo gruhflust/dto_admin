@@ -12,6 +12,7 @@
         free_device: >-
           {{ ansible_devices
              | dict2items
+             | selectattr('key', 'match', '^(sd|hd|vd|xvd|nvme)')
              | selectattr('value.partitions', 'equalto', {})
              | map(attribute='key')
              | sort
