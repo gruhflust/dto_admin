@@ -23,7 +23,9 @@ The playbook `dto_proxmox.yml` disables the subscription warning on a Proxmox ho
 
 The playbook `dto_proxstor.yml` prepares additional LVM storage on a Proxmox host. It locates the first unused block device, creates a volume group and a thin pool that spans the entire device and provisions several thin volumes. Parameters such as the volume group name, thin pool and thin volume sizes are defined in host-specific Jinja files under `templates/proxstor` and can be adjusted per target host. After execution the playbook prints a summary of the available Proxmox storages. Running the playbook again will recognise an existing volume group and simply report the current status without failing.
 
-The complementary playbook `dto_proxdestroystor.yml` removes the thin volumes, the thin pool and the volume group again, undoing the changes made by `dto_proxstor.yml`.
+The playbook also writes a matching entry to `/etc/pve/storage.cfg` and restarts the `pvedaemon` and `pveproxy` services so that Proxmox recognises the new storage.
+
+The complementary playbook `dto_proxdestroystor.yml` removes the storage entry, the thin volumes, the thin pool and the volume group again, undoing the changes made by `dto_proxstor.yml`.
 
 Run the playbook:
 
