@@ -43,13 +43,13 @@
 
     - name: "07 List Proxmox network configuration"
       ansible.builtin.command: >
-        pvesh get /nodes/{{ ansible_hostname }}/network
+        pvesh get /nodes/{{ ansible_hostname }}/network --output-format json
       register: network_config
       changed_when: false
 
     - name: "08 Show network configuration"
       ansible.builtin.debug:
-        var: network_config.stdout_lines
+        msg: "{{ network_config.stdout | from_json | to_nice_yaml }}"
 
     - name: "09 Show IP addresses"
       ansible.builtin.command: ip -o addr show
