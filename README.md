@@ -18,7 +18,7 @@ package `rclone`, creates the directory `onedrive` in the home directory and set
 as the default shell. Finally, it installs a colorful prompt that displays IP address,
 username and current directory in different colors.
 
-The playbook `dto_proxmox.yml` disables the subscription warning on a Proxmox host by patching `/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js` and restarting the `pveproxy` service.
+The playbook `dto_proxmox.yml` disables the subscription warning on a Proxmox host by patching `/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js` and restarting the `pveproxy` service. It further displays storage status, network configuration, IP addresses, block devices and the Proxmox version.
 
 Run the playbook:
 
