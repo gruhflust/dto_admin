@@ -1,0 +1,30 @@
+---
+- name: Prepare user home directory
+  hosts: all
+  gather_facts: false
+  vars_files:
+    - config.yml
+  tasks:
+    - name: Ensure home directory exists for {{ username }}
+      ansible.builtin.file:
+        path: "/home/{{ username }}"
+        state: directory
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: '0755'
+
+    - name: Ensure onedrive directory exists for {{ username }}
+      ansible.builtin.file:
+        path: "/home/{{ username }}/onedrive"
+        state: directory
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: '0755'
+
+    - name: Deploy bashrc template for {{ username }}
+      ansible.builtin.template:
+        src: templates/bashrc.j2
+        dest: "/home/{{ username }}/.bashrc"
+        owner: "{{ username }}"
+        group: "{{ username }}"
+        mode: '0644'
