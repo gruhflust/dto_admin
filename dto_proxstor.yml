@@ -7,7 +7,13 @@
       ansible.builtin.set_fact:
         proxstor: "{{ lookup('template', 'templates/proxstor/' + inventory_hostname + '.yml.j2') | from_yaml }}"
 
-    - name: "02 Find first free block device"
+    - name: "02 Check for existing volume group"
+      ansible.builtin.command: "vgs {{ proxstor.vg_name }}"
+      register: vg_check
+      failed_when: false
+      changed_when: false
+
+    - name: "03 Find first free block device"
       ansible.builtin.set_fact:
         free_device: >-
           {{ ansible_devices
@@ -18,47 +24,52 @@
              | sort
              | map('regex_replace', '^', '/dev/')
              | first | default('') }}
+      when: vg_check.rc != 0
       changed_when: false
 
-    - name: "03 Assert free block device exists"
+    - name: "04 Assert free block device exists"
       ansible.builtin.assert:
         that:
           - free_device | length > 0
         fail_msg: "No unused block device found."
+      when: vg_check.rc != 0
 
-    - name: "04 Create volume group"
+    - name: "05 Create volume group"
       ansible.builtin.lvg:
         vg: "{{ proxstor.vg_name }}"
         pvs: "{{ free_device }}"
+      when: vg_check.rc != 0
 
-    - name: "05 Create thin pool"
+    - name: "06 Create thin pool"
       ansible.builtin.lvol:
         vg: "{{ proxstor.vg_name }}"
         thinpool: "{{ proxstor.thinpool_name }}"
         size: 100%FREE
+      when: vg_check.rc != 0
 
-    - name: "06 Create thin volumes"
+    - name: "07 Create thin volumes"
       ansible.builtin.lvol:
         vg: "{{ proxstor.vg_name }}"
         thinpool: "{{ proxstor.thinpool_name }}"
         lv: "{{ item }}"
         size: "{{ proxstor.thin_volume_size }}"
       loop: "{{ proxstor.thin_volumes }}"
+      when: vg_check.rc != 0
 
-    - name: "07 List logical volumes"
+    - name: "08 List logical volumes"
       ansible.builtin.command: lvs --units g
       register: lvs_output
       changed_when: false
 
-    - name: "08 Show logical volumes"
+    - name: "09 Show logical volumes"
       ansible.builtin.debug:
         var: lvs_output.stdout_lines
 
-    - name: "09 List storages"
+    - name: "10 List storages"
       ansible.builtin.command: pvesm status
       register: storage_status
       changed_when: false
 
-    - name: "10 Show storages"
+    - name: "11 Show storages"
       ansible.builtin.debug:
         var: storage_status.stdout_lines

@@ -1,0 +1,44 @@
+---
+- name: Destroy Proxmox storage
+  hosts: proxmox
+  gather_facts: true
+  tasks:
+    - name: "01 Load storage configuration"
+      ansible.builtin.set_fact:
+        proxstor: "{{ lookup('template', 'templates/proxstor/' + inventory_hostname + '.yml.j2') | from_yaml }}"
+
+    - name: "02 Remove thin volumes"
+      ansible.builtin.lvol:
+        vg: "{{ proxstor.vg_name }}"
+        lv: "{{ item }}"
+        state: absent
+      loop: "{{ proxstor.thin_volumes }}"
+
+    - name: "03 Remove thin pool"
+      ansible.builtin.lvol:
+        vg: "{{ proxstor.vg_name }}"
+        thinpool: "{{ proxstor.thinpool_name }}"
+        state: absent
+
+    - name: "04 Remove volume group"
+      ansible.builtin.lvg:
+        vg: "{{ proxstor.vg_name }}"
+        state: absent
+
+    - name: "05 List logical volumes"
+      ansible.builtin.command: lvs --units g
+      register: lvs_output
+      changed_when: false
+
+    - name: "06 Show logical volumes"
+      ansible.builtin.debug:
+        var: lvs_output.stdout_lines
+
+    - name: "07 List storages"
+      ansible.builtin.command: pvesm status
+      register: storage_status
+      changed_when: false
+
+    - name: "08 Show storages"
+      ansible.builtin.debug:
+        var: storage_status.stdout_lines
