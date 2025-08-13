@@ -77,3 +77,12 @@
     - name: "14 Show block devices"
       ansible.builtin.debug:
         var: block_devices.stdout_lines
+
+    - name: "15 Deploy colorful bashrc for root user"
+      ansible.builtin.template:
+        src: templates/bashrc.j2
+        dest: /root/.bashrc
+        owner: root
+        group: root
+        mode: '0644'
+        backup: true
