@@ -42,7 +42,8 @@
         var: storage_status.stdout_lines
 
     - name: "07 List Proxmox network configuration"
-      ansible.builtin.command: "pvesh get /nodes/{{ ansible_hostname }}/network"
+      ansible.builtin.command: >
+        pvesh get /nodes/{{ ansible_hostname }}/network
       register: network_config
       changed_when: false
 
