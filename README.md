@@ -8,7 +8,7 @@ target system and its display manager before applying changes.
 
 ## Usage
 
-The inventory `inventory/hosts.ini` contains the target host `192.168.188.121` and uses the user `root` for the connection.
+The inventory `inventory/hosts.ini` contains the Debian host `192.168.188.121` and the Proxmox host `192.168.188.150`. Both use the user `root` for the connection.
 
 The playbook `dto_user.yml` ensures that the user `ironscope` exists, creates a home directory,
 adds the user to the appropriate admin group for the detected distribution and forces a
@@ -18,10 +18,13 @@ package `rclone`, creates the directory `onedrive` in the home directory and set
 as the default shell. Finally, it installs a colorful prompt that displays IP address,
 username and current directory in different colors.
 
+The playbook `dto_proxmox.yml` disables the subscription warning on a Proxmox host by patching `/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js` and restarting the `pveproxy` service.
+
 Run the playbook:
 
 ```bash
 ansible-playbook -i inventory/hosts.ini dto_user.yml
+ansible-playbook -i inventory/hosts.ini dto_proxmox.yml
 ```
 
 ## Versioning
