@@ -19,7 +19,7 @@ package `rclone`, creates the directory `onedrive` in the home directory and set
 as the default shell. Finally, it installs a colorful prompt that displays IP address,
 username and current directory in different colors.
 
-The playbook `dto_proxmox.yml` disables the subscription warning on a Proxmox host by patching `/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js` and restarting the `pveproxy` service. It further displays storage status, network configuration, IP addresses, block devices and the Proxmox version.
+The playbook `dto_proxmox.yml` disables the subscription warning on a Proxmox host by patching `/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js` and restarting the `pveproxy` service. It further displays storage status, network configuration, IP addresses, block devices and the Proxmox version and installs a colourful prompt for the root user.
 
 The playbook `dto_proxstor.yml` prepares additional LVM storage on a Proxmox host. It locates the first unused block device, creates a volume group and a thin pool that spans the entire device and provisions several thin volumes. Parameters such as the volume group name, thin pool and thin volume sizes are defined in host-specific Jinja files under `templates/proxstor` and can be adjusted per target host. After execution the playbook prints a summary of the available Proxmox storages. Running the playbook again will recognise an existing volume group and simply report the current status without failing.
 
