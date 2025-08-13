@@ -1,12 +1,69 @@
 ---
-- name: Manage Proxmox host
+- name: Audit Proxmox host
   hosts: proxmox
   gather_facts: false
   tasks:
-    - name: "01 Disable subscription warning"
-      # ansible.builtin.shell: run shell commands on the remote host
+    - name: "01 Check if subscription warning is disabled"
       ansible.builtin.shell:
-        cmd: >-  # cmd: command executed on remote host
+        cmd: >-
+          grep -q "void({ //" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+      register: subscription_warning_disabled
+      changed_when: false
+      failed_when: false
+
+    - name: "02 Disable subscription warning if missing"
+      ansible.builtin.shell:
+        cmd: >-
           sed -Ezi.bak "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js &&
           systemctl restart pveproxy.service
+      when: subscription_warning_disabled.rc != 0
 
+    - name: "03 Re-check subscription warning status"
+      ansible.builtin.shell:
+        cmd: >-
+          grep -q "void({ //" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+      register: subscription_warning_disabled_after
+      changed_when: false
+      failed_when: false
+
+    - name: "04 Assert subscription warning disabled"
+      ansible.builtin.assert:
+        that:
+          - subscription_warning_disabled_after.rc == 0
+        fail_msg: "Subscription warning patch missing."
+
+    - name: "05 List storages"
+      ansible.builtin.command: pvesm status
+      register: storage_status
+      changed_when: false
+
+    - name: "06 Show storages"
+      ansible.builtin.debug:
+        var: storage_status.stdout_lines
+
+    - name: "07 List Proxmox network configuration"
+      ansible.builtin.command: "pvesh get /nodes/$(hostname)/network"
+      register: network_config
+      changed_when: false
+
+    - name: "08 Show network configuration"
+      ansible.builtin.debug:
+        var: network_config.stdout_lines
+
+    - name: "09 Show IP addresses"
+      ansible.builtin.command: ip -o addr show
+      register: ip_addr_output
+      changed_when: false
+
+    - name: "10 Display IP addresses"
+      ansible.builtin.debug:
+        var: ip_addr_output.stdout_lines
+
+    - name: "11 Show Proxmox version"
+      ansible.builtin.command: pveversion
+      register: pve_version
+      changed_when: false
+
+    - name: "12 Display Proxmox version"
+      ansible.builtin.debug:
+        var: pve_version.stdout_lines
