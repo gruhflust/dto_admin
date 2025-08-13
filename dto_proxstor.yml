@@ -1,0 +1,58 @@
+---
+- name: Manage Proxmox storage
+  hosts: proxmox
+  gather_facts: true
+  tasks:
+    - name: "01 Load storage configuration"
+      ansible.builtin.include_vars:
+        name: proxstor
+        content: "{{ lookup('template', 'templates/proxstor/' + inventory_hostname + '.yml.j2') }}"
+
+    - name: "02 Find first free block device"
+      ansible.builtin.shell:
+        cmd: lsblk -ndo NAME,TYPE,FSTYPE | awk '$2=="disk" && $3=="" {print "/dev/"$1; exit}'
+      register: free_device
+      changed_when: false
+
+    - name: "03 Assert free block device exists"
+      ansible.builtin.assert:
+        that:
+          - free_device.stdout != ''
+        fail_msg: "No unused block device found."
+
+    - name: "04 Create volume group"
+      ansible.builtin.lvg:
+        vg: "{{ proxstor.vg_name }}"
+        pvs: "{{ free_device.stdout }}"
+
+    - name: "05 Create thin pool"
+      ansible.builtin.lvol:
+        vg: "{{ proxstor.vg_name }}"
+        thinpool: "{{ proxstor.thinpool_name }}"
+        size: 100%FREE
+
+    - name: "06 Create thin volumes"
+      ansible.builtin.lvol:
+        vg: "{{ proxstor.vg_name }}"
+        thinpool: "{{ proxstor.thinpool_name }}"
+        lv: "{{ item }}"
+        size: "{{ proxstor.thin_volume_size }}"
+      loop: "{{ proxstor.thin_volumes }}"
+
+    - name: "07 List logical volumes"
+      ansible.builtin.command: lvs --units g
+      register: lvs_output
+      changed_when: false
+
+    - name: "08 Show logical volumes"
+      ansible.builtin.debug:
+        var: lvs_output.stdout_lines
+
+    - name: "09 List storages"
+      ansible.builtin.command: pvesm status
+      register: storage_status
+      changed_when: false
+
+    - name: "10 Show storages"
+      ansible.builtin.debug:
+        var: storage_status.stdout_lines
