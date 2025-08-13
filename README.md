@@ -27,13 +27,20 @@ The playbook also writes a matching entry to `/etc/pve/storage.cfg` and restarts
 
 The complementary playbook `dto_proxdestroystor.yml` removes the storage entry, the thin volumes, the thin pool and the volume group again, undoing the changes made by `dto_proxstor.yml`.
 
-Run the playbook:
+Run the playbooks either directly or via the convenience aliases defined in `.bashrc`:
 
 ```bash
-ansible-playbook -i inventory/hosts.ini dto_user.yml
-ansible-playbook -i inventory/hosts.ini dto_proxmox.yml
-ansible-playbook -i inventory/hosts.ini dto_proxstor.yml
-ansible-playbook -i inventory/hosts.ini dto_proxdestroystor.yml
+# direct commands
+ansible-playbook -i inventory/hosts.ini dto_user.yml          # alias: admin
+ansible-playbook -i inventory/hosts.ini dto_proxmox.yml       # alias: prox
+ansible-playbook -i inventory/hosts.ini dto_proxstor.yml      # alias: proxstor
+ansible-playbook -i inventory/hosts.ini dto_proxdestroystor.yml  # alias: proxdestroystor
+
+# using aliases
+admin
+prox
+proxstor
+proxdestroystor
 ```
 
 ## Versioning

@@ -26,6 +26,7 @@
         vg: "{{ proxstor.vg_name }}"
         lv: "{{ item }}"
         state: absent
+        force: true
       loop: "{{ proxstor.thin_volumes }}"
 
     - name: "04 Remove thin pool"
@@ -33,11 +34,13 @@
         vg: "{{ proxstor.vg_name }}"
         thinpool: "{{ proxstor.thinpool_name }}"
         state: absent
+        force: true
 
     - name: "05 Remove volume group"
       ansible.builtin.lvg:
         vg: "{{ proxstor.vg_name }}"
         state: absent
+        force: true
 
     - name: "06 List logical volumes"
       ansible.builtin.command: lvs --units g
