@@ -20,11 +20,14 @@ username and current directory in different colors.
 
 The playbook `dto_proxmox.yml` disables the subscription warning on a Proxmox host by patching `/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js` and restarting the `pveproxy` service. It further displays storage status, network configuration, IP addresses, block devices and the Proxmox version.
 
+The playbook `dto_proxstor.yml` prepares additional LVM storage on a Proxmox host. It locates the first unused block device, creates a volume group and a thin pool that spans the entire device and provisions several thin volumes. Parameters such as the volume group name, thin pool and thin volume sizes are defined in host-specific Jinja files under `templates/proxstor` and can be adjusted per target host. After execution the playbook prints a summary of the available Proxmox storages.
+
 Run the playbook:
 
 ```bash
 ansible-playbook -i inventory/hosts.ini dto_user.yml
 ansible-playbook -i inventory/hosts.ini dto_proxmox.yml
+ansible-playbook -i inventory/hosts.ini dto_proxstor.yml
 ```
 
 ## Versioning
