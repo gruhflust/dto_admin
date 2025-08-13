@@ -1,0 +1,12 @@
+---
+- name: Manage Proxmox host
+  hosts: proxmox
+  gather_facts: false
+  tasks:
+    - name: "01 Disable subscription warning"
+      # ansible.builtin.shell: run shell commands on the remote host
+      ansible.builtin.shell:
+        cmd: >-  # cmd: command executed on remote host
+          sed -Ezi.bak "s/(Ext.Msg.show\(\{\s+title: gettext\('No valid sub)/void\(\{ \/\/\1/g" /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js &&
+          systemctl restart pveproxy.service
+
