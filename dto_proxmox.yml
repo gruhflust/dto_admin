@@ -1,7 +1,7 @@
 ---
 - name: Audit Proxmox host
   hosts: proxmox
-  gather_facts: false
+  gather_facts: true
   tasks:
     - name: "01 Check if subscription warning is disabled"
       ansible.builtin.shell:
