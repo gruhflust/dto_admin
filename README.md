@@ -29,16 +29,15 @@ auch mehrere Proxmox‑Server. Alle Verbindungen erfolgen als Benutzer `root`.
   `templates/proxmox_summary.html.j2` einen Bericht `proxmox-summary.pdf`.
 - `dto_proxcomfort.yml` entfernt den Subskriptionshinweis auf einem
   Proxmox‑Host und installiert eine farbige Prompt für `root`.
-- `dto_proxstorage.yml` richtet zusätzliche LVM‑Thin‑Storage ein. Die
-  Parameter werden pro Host in
+- `dto_proxstorage.yml` richtet zusätzlichen LVM‑Thin‑Storage ein, der den
+  kompletten freien Speicherplatz nutzt. Die Parameter werden pro Host in
   `templates/proxstorage/<inventory_hostname>.yml.j2`
-  definiert (z.B. `storage_name`, `vg_name`, `thinpool_name`,
-  `thin_volumes`, `thin_volume_size`).
+  definiert (z.B. `storage_name`, `vg_name`, `thinpool_name`).
   `dto_proxstoragedestroy.yml` macht diese Änderungen rückgängig.
 - `dto_proxinvoke.yml` erstellt neue virtuelle Maschinen. Alle
   VM‑Einstellungen wie `vmid`, `name`, `target_host`, `storage`,
-  `disk_size`, `cores`, `memory` und `networks` stammen aus der
-  Datei `templates/proxinvoke/<inventory_hostname>.yml.j2`.
+  `disk_size` (GiB, optional mit "G"‑Suffix), `cores`, `memory` und `networks`
+  stammen aus der Datei `templates/proxinvoke/<inventory_hostname>.yml.j2`.
   Die gleiche Vorlage nutzt `dto_proxrevoke.yml`, um VMs wieder zu
   entfernen.
 
@@ -107,11 +106,10 @@ multiple Proxmox servers. All connections use the `root` user.
 - `dto_proxstorage.yml` sets up additional LVM thin storage. Host specific
   parameters are stored in
   `templates/proxstorage/<inventory_hostname>.yml.j2`
-  (e.g. `storage_name`, `vg_name`, `thinpool_name`, `thin_volumes`,
-  `thin_volume_size`).
+  (e.g. `storage_name`, `vg_name`, `thinpool_name`).
   `dto_proxstoragedestroy.yml` reverses these changes.
 - `dto_proxinvoke.yml` provisions new virtual machines. All VM parameters
-  (`vmid`, `name`, `target_host`, `storage`, `disk_size`, `cores`,
+  (`vmid`, `name`, `target_host`, `storage`, `disk_size` (GiB), `cores`,
   `memory`, `networks`) are loaded from
   `templates/proxinvoke/<inventory_hostname>.yml.j2`.
   The same template is used by `dto_proxrevoke.yml` to remove VMs.
