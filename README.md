@@ -59,8 +59,6 @@ host­spezifischen Jinja-Dateien unter `templates/proxinvoke`. Vor der
 Erstellung wird geprüft, ob der Zielhost sowie das angegebene Storage vorhanden
 sind. Existiert die Maschine noch nicht, wird sie erzeugt und gestartet.
 
-Das Gegenstück `dto_proxrevoke.yml` entfernt eine zuvor angelegte VM einschließlich
-der zugehörigen Laufwerke wieder vom Zielhost.
 
 Run the playbooks either directly or via the convenience aliases defined in `.bashrc`:
 
