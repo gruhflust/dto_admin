@@ -60,11 +60,9 @@
           block_devices: "{{ block_devices.stdout_lines }}"
 
     - name: Build Proxmox summary HTML
-      hosts: localhost
-      gather_facts: false
-      tasks:
-        - name: Render Proxmox summary HTML
-          ansible.builtin.template:
-            src: templates/proxmox_summary.html.j2
-            dest: proxmox-summary.html
+      ansible.builtin.template:
+        src: templates/proxmox_summary.html.j2
+        dest: proxmox-summary.html
+      delegate_to: localhost
+      run_once: true
 
