@@ -1,0 +1,61 @@
+---
+- name: Create Proxmox virtual machines
+  hosts: proxmox
+  gather_facts: true
+  tasks:
+    - name: "01 Verify host availability"
+      ansible.builtin.ping:
+
+    - name: "02 Load VM configuration"
+      ansible.builtin.set_fact:
+        proxinvoke: "{{ lookup('template', 'templates/proxinvoke/' + inventory_hostname + '.yml.j2') | from_yaml }}"
+
+    - name: "03 Ensure configuration targets this host"
+      ansible.builtin.assert:
+        that:
+          - proxinvoke.target_host == inventory_hostname
+        fail_msg: "Konfiguration zielt auf einen anderen Host." 
+
+    - name: "04 Check for required storage"
+      ansible.builtin.command: pvesm status
+      register: storage_status
+      changed_when: false
+
+    - name: "05 Assert storage present"
+      ansible.builtin.assert:
+        that:
+          - proxinvoke.storage in storage_status.stdout
+        fail_msg: "Benötigtes Storage {{ proxinvoke.storage }} nicht vorhanden."
+
+    - name: "06 Check if VM already exists"
+      ansible.builtin.command: qm list
+      register: qm_list
+      changed_when: false
+
+    - name: "07 Create VM"
+      ansible.builtin.command: >-
+        qm create {{ proxinvoke.vmid }}
+        --name {{ proxinvoke.name }}
+        --memory {{ proxinvoke.memory }}
+        --cores {{ proxinvoke.cores }}
+        --net0 {{ proxinvoke.networks[0] }}
+      when: proxinvoke.vmid|string not in qm_list.stdout
+
+    - name: "08 Configure disk"
+      ansible.builtin.command: >-
+        qm set {{ proxinvoke.vmid }}
+        --scsi0 {{ proxinvoke.storage }}:{{ proxinvoke.vmid }}/vm-{{ proxinvoke.vmid }}-disk-0.raw,discard=on,size={{ proxinvoke.disk_size }}
+      when: proxinvoke.vmid|string not in qm_list.stdout
+
+    - name: "09 Start VM"
+      ansible.builtin.command: "qm start {{ proxinvoke.vmid }}"
+      when: proxinvoke.vmid|string not in qm_list.stdout
+
+    - name: "10 Show VM status"
+      ansible.builtin.command: "qm status {{ proxinvoke.vmid }}"
+      register: vm_status
+      changed_when: false
+
+    - name: "11 Display VM status"
+      ansible.builtin.debug:
+        var: vm_status.stdout_lines

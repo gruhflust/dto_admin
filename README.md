@@ -52,6 +52,13 @@ The complementary playbook `dto_proxstoragedestroy.yml` removes the storage entr
 volumes, the thin pool and the volume group again, undoing the changes made by
 `dto_proxstorage.yml`.
 
+The playbook `dto_proxinvoke.yml` provisioniert eine neue virtuelle Maschine auf
+einem Proxmox-Host. Es lädt alle relevanten Parameter – Name, Zielhost,
+Festplattengröße, CPU-, Speicher- und Netzwerkkonfiguration – aus
+host­spezifischen Jinja-Dateien unter `templates/proxinvoke`. Vor der
+Erstellung wird geprüft, ob der Zielhost sowie das angegebene Storage vorhanden
+sind. Existiert die Maschine noch nicht, wird sie erzeugt und gestartet.
+
 Run the playbooks either directly or via the convenience aliases defined in `.bashrc`:
 
 ```bash
@@ -63,6 +70,7 @@ ansible-playbook -i inventory/hosts.ini dto_proxreport.yml      # alias: proxrep
 ansible-playbook -i inventory/hosts.ini dto_proxcomfort.yml     # alias: proxcomfort
 ansible-playbook -i inventory/hosts.ini dto_proxstorage.yml     # alias: proxstorage
 ansible-playbook -i inventory/hosts.ini dto_proxstoragedestroy.yml # alias: proxstoragedestroy
+ansible-playbook -i inventory/hosts.ini dto_proxinvoke.yml     # alias: proxinvoke
 
 # using aliases
 admin
@@ -70,6 +78,7 @@ proxreport
 proxcomfort
 proxstorage
 proxstoragedestroy
+proxinvoke
 ```
 
 ## Versioning
