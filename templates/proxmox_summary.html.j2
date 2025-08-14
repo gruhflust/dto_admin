@@ -11,9 +11,12 @@
   </style>
 </head>
 <body>
+  <p>Report generated: {{ hostvars[groups['proxmox'][0]].proxstat_data.creation_date }}</p>
 {% for host in groups['proxmox'] %}
   <div class="section">
     <h1>{{ hostvars[host].ansible_host | default(host) }} - {{ hostvars[host].ansible_hostname }}</h1>
+    <p>Proxmox version: {{ hostvars[host].proxstat_data.pve_version | join(', ') }}<br>
+       Uptime: {{ hostvars[host].proxstat_data.uptime }}</p>
 
     <h2>Storage</h2>
     <pre>{{ hostvars[host].proxstat_data.storage_status | join('\n') }}</pre>
@@ -24,11 +27,14 @@
     <h2>IP addresses</h2>
     <pre>{{ hostvars[host].proxstat_data.ip_addresses | join('\n') }}</pre>
 
-    <h2>Proxmox version</h2>
-    <pre>{{ hostvars[host].proxstat_data.pve_version | join('\n') }}</pre>
-
     <h2>Block devices</h2>
     <pre>{{ hostvars[host].proxstat_data.block_devices | join('\n') }}</pre>
+
+    <h2>Hardware details</h2>
+    <pre>{{ hostvars[host].proxstat_data.hardware_details }}</pre>
+
+    <h2>Virtual machines</h2>
+    <pre>{{ hostvars[host].proxstat_data.vm_list | join('\n') }}</pre>
   </div>
 {% endfor %}
 </body>

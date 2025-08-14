@@ -1,20 +1,27 @@
+Report generated: {{ hostvars[groups['proxmox'][0]].proxstat_data.creation_date }}
+
 {% for host in groups['proxmox'] %}
 # {{ hostvars[host].ansible_host | default(host) }} - {{ hostvars[host].ansible_hostname }}
+Proxmox version: {{ hostvars[host].proxstat_data.pve_version | join(', ') }}
+Uptime: {{ hostvars[host].proxstat_data.uptime }}
 
 ## Storage
-{{ hostvars[host].proxstat_data.storage_status | join('\n') }}
+{{ hostvars[host].proxstat_data.storage_status | join('\\n') }}
 
 ## Network
 {{ hostvars[host].proxstat_data.network_config | to_nice_yaml }}
 
 ## IP addresses
-{{ hostvars[host].proxstat_data.ip_addresses | join('\n') }}
-
-## Proxmox version
-{{ hostvars[host].proxstat_data.pve_version | join('\n') }}
+{{ hostvars[host].proxstat_data.ip_addresses | join('\\n') }}
 
 ## Block devices
-{{ hostvars[host].proxstat_data.block_devices | join('\n') }}
+{{ hostvars[host].proxstat_data.block_devices | join('\\n') }}
+
+## Hardware details
+{{ hostvars[host].proxstat_data.hardware_details }}
+
+## Virtual machines
+{{ hostvars[host].proxstat_data.vm_list | join('\\n') }}
 {% if not loop.last %}
 \\newpage
 {% endif %}
