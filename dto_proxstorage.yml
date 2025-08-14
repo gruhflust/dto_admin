@@ -5,10 +5,10 @@
   tasks:
     - name: "01 Load storage configuration"
       ansible.builtin.set_fact:
-        proxstor: "{{ lookup('template', 'templates/proxstor/' + inventory_hostname + '.yml.j2') | from_yaml }}"
+        proxstorage: "{{ lookup('template', 'templates/proxstorage/' + inventory_hostname + '.yml.j2') | from_yaml }}"
 
     - name: "02 Check for existing volume group"
-      ansible.builtin.command: "vgs {{ proxstor.vg_name }}"
+      ansible.builtin.command: "vgs {{ proxstorage.vg_name }}"
       register: vg_check
       failed_when: false
       changed_when: false
@@ -36,34 +36,34 @@
 
     - name: "05 Create volume group"
       ansible.builtin.lvg:
-        vg: "{{ proxstor.vg_name }}"
+        vg: "{{ proxstorage.vg_name }}"
         pvs: "{{ free_device }}"
       when: vg_check.rc != 0
 
     - name: "06 Create thin pool"
       ansible.builtin.lvol:
-        vg: "{{ proxstor.vg_name }}"
-        thinpool: "{{ proxstor.thinpool_name }}"
+        vg: "{{ proxstorage.vg_name }}"
+        thinpool: "{{ proxstorage.thinpool_name }}"
         size: 100%FREE
       when: vg_check.rc != 0
 
     - name: "07 Create thin volumes"
       ansible.builtin.lvol:
-        vg: "{{ proxstor.vg_name }}"
-        thinpool: "{{ proxstor.thinpool_name }}"
+        vg: "{{ proxstorage.vg_name }}"
+        thinpool: "{{ proxstorage.thinpool_name }}"
         lv: "{{ item }}"
-        size: "{{ proxstor.thin_volume_size }}"
-      loop: "{{ proxstor.thin_volumes }}"
+        size: "{{ proxstorage.thin_volume_size }}"
+      loop: "{{ proxstorage.thin_volumes }}"
       when: vg_check.rc != 0
 
     - name: "08 Configure Proxmox storage"
       ansible.builtin.blockinfile:
         path: /etc/pve/storage.cfg
-        marker: "# {mark} ANSIBLE MANAGED proxstor"
+        marker: "# {mark} ANSIBLE MANAGED proxstorage"
         block: |
-          lvmthin: {{ proxstor.storage_name }}
-              thinpool {{ proxstor.thinpool_name }}
-              vgname {{ proxstor.vg_name }}
+          lvmthin: {{ proxstorage.storage_name }}
+              thinpool {{ proxstorage.thinpool_name }}
+              vgname {{ proxstorage.vg_name }}
               content rootdir,images
         create: true
       notify:

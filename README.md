@@ -23,7 +23,7 @@ username and current directory in different colors.
 
 ### Proxmox playbooks
 
-The playbook `dto_proxstat.yml` displays storage status, network configuration, IP addresses,
+The playbook `dto_proxreport.yml` displays storage status, network configuration, IP addresses,
 block devices, hardware details, the system uptime and the Proxmox version. It also lists
 virtual machines and generates `proxmox-summary.pdf` which summarises this information for
 each queried server on its own page and includes the report creation date.
@@ -37,10 +37,10 @@ The playbook `dto_proxcomfort.yml` disables the subscription warning on a Proxmo
 patching `/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js` and restarting the
 `pveproxy` service. It also installs a colourful prompt for the root user.
 
-The playbook `dto_proxstor.yml` prepares additional LVM storage on a Proxmox host. It locates
+The playbook `dto_proxstorage.yml` prepares additional LVM storage on a Proxmox host. It locates
 the first unused block device, creates a volume group and a thin pool that spans the entire
 device and provisions several thin volumes. Parameters such as the volume group name, thin
-pool and thin volume sizes are defined in host-specific Jinja files under `templates/proxstor`
+pool and thin volume sizes are defined in host-specific Jinja files under `templates/proxstorage`
 and can be adjusted per target host. After execution the playbook prints a summary of the
 available Proxmox storages. Running the playbook again will recognise an existing volume group
 and simply report the current status without failing.
@@ -48,9 +48,9 @@ and simply report the current status without failing.
 The playbook also writes a matching entry to `/etc/pve/storage.cfg` and restarts the
 `pvedaemon` and `pveproxy` services so that Proxmox recognises the new storage.
 
-The complementary playbook `dto_proxdestroystor.yml` removes the storage entry, the thin
+The complementary playbook `dto_proxstoragedestroy.yml` removes the storage entry, the thin
 volumes, the thin pool and the volume group again, undoing the changes made by
-`dto_proxstor.yml`.
+`dto_proxstorage.yml`.
 
 Run the playbooks either directly or via the convenience aliases defined in `.bashrc`:
 
@@ -59,17 +59,17 @@ Run the playbooks either directly or via the convenience aliases defined in `.ba
 ansible-playbook -i inventory/hosts.ini dto_user.yml            # alias: admin
 
 # Proxmox
-ansible-playbook -i inventory/hosts.ini dto_proxstat.yml        # alias: proxstat
+ansible-playbook -i inventory/hosts.ini dto_proxreport.yml      # alias: proxreport
 ansible-playbook -i inventory/hosts.ini dto_proxcomfort.yml     # alias: proxcomfort
-ansible-playbook -i inventory/hosts.ini dto_proxstor.yml        # alias: proxstor
-ansible-playbook -i inventory/hosts.ini dto_proxdestroystor.yml # alias: proxdestroystor
+ansible-playbook -i inventory/hosts.ini dto_proxstorage.yml     # alias: proxstorage
+ansible-playbook -i inventory/hosts.ini dto_proxstoragedestroy.yml # alias: proxstoragedestroy
 
 # using aliases
 admin
-proxstat
+proxreport
 proxcomfort
-proxstor
-proxdestroystor
+proxstorage
+proxstoragedestroy
 ```
 
 ## Versioning

@@ -83,9 +83,9 @@
       ansible.builtin.debug:
         var: vm_list.stdout_lines
 
-    - name: "18 Collect data for summary"
+    - name: "18 Collect data for report"
       ansible.builtin.set_fact:
-        proxstat_data:
+        proxreport_data:
           storage_status: "{{ storage_status.stdout_lines }}"
           network_config: "{{ network_config.stdout | from_json }}"
           ip_addresses: "{{ ip_addr_output.stdout_lines }}"

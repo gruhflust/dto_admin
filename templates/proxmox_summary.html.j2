@@ -11,31 +11,31 @@
   </style>
 </head>
 <body>
-  <p>Report generated: {{ hostvars[ansible_play_hosts[0]].proxstat_data.creation_date | default('N/A') }}</p>
+  <p>Report generated: {{ hostvars[ansible_play_hosts[0]].proxreport_data.creation_date | default('N/A') }}</p>
 {% for host in ansible_play_hosts %}
-  {% if hostvars[host].proxstat_data is defined %}
+  {% if hostvars[host].proxreport_data is defined %}
   <div class="section">
     <h1>{{ hostvars[host].ansible_host | default(host) }} - {{ hostvars[host].ansible_hostname }}</h1>
-    <p>Proxmox version: {{ hostvars[host].proxstat_data.pve_version | join(', ') }}<br>
-       Uptime: {{ hostvars[host].proxstat_data.uptime }}</p>
+    <p>Proxmox version: {{ hostvars[host].proxreport_data.pve_version | join(', ') }}<br>
+       Uptime: {{ hostvars[host].proxreport_data.uptime }}</p>
 
     <h2>Storage</h2>
-    <pre>{{ hostvars[host].proxstat_data.storage_status | join('\n') }}</pre>
+    <pre>{{ hostvars[host].proxreport_data.storage_status | join('\n') }}</pre>
 
     <h2>Network</h2>
-    <pre>{{ hostvars[host].proxstat_data.network_config | to_nice_yaml }}</pre>
+    <pre>{{ hostvars[host].proxreport_data.network_config | to_nice_yaml }}</pre>
 
     <h2>IP addresses</h2>
-    <pre>{{ hostvars[host].proxstat_data.ip_addresses | join('\n') }}</pre>
+    <pre>{{ hostvars[host].proxreport_data.ip_addresses | join('\n') }}</pre>
 
     <h2>Block devices</h2>
-    <pre>{{ hostvars[host].proxstat_data.block_devices | join('\n') }}</pre>
+    <pre>{{ hostvars[host].proxreport_data.block_devices | join('\n') }}</pre>
 
     <h2>Hardware details</h2>
-    <pre>{{ hostvars[host].proxstat_data.hardware_details }}</pre>
+    <pre>{{ hostvars[host].proxreport_data.hardware_details }}</pre>
 
     <h2>Virtual machines</h2>
-    <pre>{{ hostvars[host].proxstat_data.vm_list | join('\n') }}</pre>
+    <pre>{{ hostvars[host].proxreport_data.vm_list | join('\n') }}</pre>
   </div>
   {% endif %}
 {% endfor %}
