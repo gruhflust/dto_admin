@@ -64,16 +64,12 @@
         --scsi0 {{ proxinvoke.storage }}:{{ proxinvoke.disk_size | regex_replace('[^0-9]', '') | int }},discard=on
       when: proxinvoke.vmid|string not in qm_list.stdout
 
-    - name: "10 Start VM"
-      ansible.builtin.command: "qm start {{ proxinvoke.vmid }}"
-      when: proxinvoke.vmid|string not in qm_list.stdout
-
-    - name: "11 Show VM status"
+    - name: "10 Show VM status"
       ansible.builtin.command: "qm status {{ proxinvoke.vmid }}"
       register: vm_status
       changed_when: false
 
-    - name: "12 Display VM status"
+    - name: "11 Display VM status"
       ansible.builtin.debug:
         var: vm_status.stdout_lines
 
