@@ -58,7 +58,7 @@
     - name: "09 Configure disk"
       ansible.builtin.command: >-
         qm set {{ proxinvoke.vmid }}
-        --scsi0 {{ proxinvoke.storage }}:{{ proxinvoke.vmid }}/vm-{{ proxinvoke.vmid }}-disk-0.raw,discard=on,size={{ proxinvoke.disk_size }}
+        --scsi0 {{ proxinvoke.storage }}:vm-{{ proxinvoke.vmid }}-disk-0,discard=on,size={{ proxinvoke.disk_size }}
       when: proxinvoke.vmid|string not in qm_list.stdout
 
     - name: "10 Start VM"
