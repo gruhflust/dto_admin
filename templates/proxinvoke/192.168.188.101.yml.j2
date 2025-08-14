@@ -1,0 +1,30 @@
+# VM-Konfiguration für {{ inventory_hostname }}
+#
+# Diese Jinja2-Vorlage beschreibt alle Parameter, die zum Anlegen einer
+# virtuellen Maschine auf dem Proxmox-Zielsystem benötigt werden. Die Werte
+# können bei Bedarf angepasst oder erweitert werden.
+
+# Eindeutige ID der VM innerhalb des Proxmox-Clusters.
+vmid: 9000
+
+# Anzeigename der zu erstellenden VM.
+name: dto-testvm
+
+# IP-Adresse oder Hostname des Proxmox-Knotens, auf dem die VM erstellt wird.
+target_host: 192.168.188.101
+
+# Name des vorhandenen Proxmox-Storages für die Systemfestplatte.
+storage: dto-lvmthin
+
+# Größe der Systemfestplatte.
+disk_size: 10G
+
+# Anzahl der vCPUs.
+cores: 2
+
+# Arbeitsspeicher der VM in MiB.
+memory: 2048
+
+# Netzwerkdefinitionen. Weitere Einträge können ergänzt werden.
+networks:
+  - virtio,bridge=vmbr0

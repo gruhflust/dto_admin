@@ -1,0 +1,59 @@
+---
+- name: Remove Proxmox virtual machines
+  hosts: proxmox
+  gather_facts: true
+  tasks:
+    - name: "01 Verify host availability"
+      ansible.builtin.ping:
+
+    - name: "02 Check for host configuration"
+      ansible.builtin.stat:
+        path: "templates/proxinvoke/{{ inventory_hostname }}.yml.j2"
+      register: proxrevoke_template
+
+    - name: "02a Skip host without configuration"
+      ansible.builtin.debug:
+        msg: "Keine Konfiguration für {{ inventory_hostname }} vorhanden – Host wird übersprungen."
+      when: not proxrevoke_template.stat.exists
+
+    - meta: end_host
+      when: not proxrevoke_template.stat.exists
+
+    - name: "03 Load VM configuration"
+      ansible.builtin.set_fact:
+        proxrevoke: "{{ lookup('template', 'templates/proxinvoke/' + inventory_hostname + '.yml.j2') | from_yaml }}"
+
+    - name: "04 Ensure configuration targets this host"
+      ansible.builtin.assert:
+        that:
+          - proxrevoke.target_host == inventory_hostname
+        fail_msg: "Konfiguration zielt auf einen anderen Host."
+
+    - name: "05 Check existing VMs"
+      ansible.builtin.command: qm list
+      register: qm_list
+      changed_when: false
+
+    - name: "06 Stop VM if running"
+      ansible.builtin.command: "qm stop {{ proxrevoke.vmid }}"
+      register: stop_result
+      failed_when: stop_result.rc not in [0, 255]
+      when: proxrevoke.vmid|string in qm_list.stdout
+
+    - name: "07 Destroy VM"
+      ansible.builtin.command: "qm destroy {{ proxrevoke.vmid }} --purge 1"
+      when: proxrevoke.vmid|string in qm_list.stdout
+
+    - name: "08 VM not found message"
+      ansible.builtin.debug:
+        msg: "VM {{ proxrevoke.vmid }} existiert nicht."
+      when: proxrevoke.vmid|string not in qm_list.stdout
+
+    - name: "09 Show remaining VMs"
+      ansible.builtin.command: qm list
+      register: qm_list_after
+      changed_when: false
+
+    - name: "10 Display remaining VMs"
+      ansible.builtin.debug:
+        var: qm_list_after.stdout_lines
