@@ -11,8 +11,9 @@
   </style>
 </head>
 <body>
-  <p>Report generated: {{ hostvars[groups['proxmox'][0]].proxstat_data.creation_date }}</p>
-{% for host in groups['proxmox'] %}
+  <p>Report generated: {{ hostvars[ansible_play_hosts[0]].proxstat_data.creation_date | default('N/A') }}</p>
+{% for host in ansible_play_hosts %}
+  {% if hostvars[host].proxstat_data is defined %}
   <div class="section">
     <h1>{{ hostvars[host].ansible_host | default(host) }} - {{ hostvars[host].ansible_hostname }}</h1>
     <p>Proxmox version: {{ hostvars[host].proxstat_data.pve_version | join(', ') }}<br>
@@ -36,6 +37,7 @@
     <h2>Virtual machines</h2>
     <pre>{{ hostvars[host].proxstat_data.vm_list | join('\n') }}</pre>
   </div>
+  {% endif %}
 {% endfor %}
 </body>
 </html>

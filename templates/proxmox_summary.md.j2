@@ -1,6 +1,7 @@
-Report generated: {{ hostvars[groups['proxmox'][0]].proxstat_data.creation_date }}
+Report generated: {{ hostvars[ansible_play_hosts[0]].proxstat_data.creation_date | default('N/A') }}
 
-{% for host in groups['proxmox'] %}
+{% for host in ansible_play_hosts %}
+{% if hostvars[host].proxstat_data is defined %}
 # {{ hostvars[host].ansible_host | default(host) }} - {{ hostvars[host].ansible_hostname }}
 Proxmox version: {{ hostvars[host].proxstat_data.pve_version | join(', ') }}
 Uptime: {{ hostvars[host].proxstat_data.uptime }}
@@ -24,5 +25,6 @@ Uptime: {{ hostvars[host].proxstat_data.uptime }}
 {{ hostvars[host].proxstat_data.vm_list | join('\\n') }}
 {% if not loop.last %}
 \\newpage
+{% endif %}
 {% endif %}
 {% endfor %}
