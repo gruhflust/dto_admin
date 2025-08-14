@@ -59,6 +59,7 @@ host­spezifischen Jinja-Dateien unter `templates/proxinvoke`. Vor der
 Erstellung wird geprüft, ob der Zielhost sowie das angegebene Storage vorhanden
 sind. Existiert die Maschine noch nicht, wird sie erzeugt und gestartet.
 
+
 Run the playbooks either directly or via the convenience aliases defined in `.bashrc`:
 
 ```bash
@@ -71,6 +72,7 @@ ansible-playbook -i inventory/hosts.ini dto_proxcomfort.yml     # alias: proxcom
 ansible-playbook -i inventory/hosts.ini dto_proxstorage.yml     # alias: proxstorage
 ansible-playbook -i inventory/hosts.ini dto_proxstoragedestroy.yml # alias: proxstoragedestroy
 ansible-playbook -i inventory/hosts.ini dto_proxinvoke.yml     # alias: proxinvoke
+ansible-playbook -i inventory/hosts.ini dto_proxrevoke.yml     # alias: proxrevoke
 
 # using aliases
 admin
@@ -79,6 +81,7 @@ proxcomfort
 proxstorage
 proxstoragedestroy
 proxinvoke
+proxrevoke
 ```
 
 ## Versioning

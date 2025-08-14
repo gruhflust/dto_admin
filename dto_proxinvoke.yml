@@ -6,6 +6,32 @@
     - name: "01 Verify host availability"
       ansible.builtin.ping:
 
+
+    - name: "02 Check for host configuration"
+      ansible.builtin.stat:
+        path: "templates/proxinvoke/{{ inventory_hostname }}.yml.j2"
+      register: proxinvoke_template
+
+    - name: "02a Skip host without configuration"
+      ansible.builtin.debug:
+        msg: "Keine Konfiguration für {{ inventory_hostname }} vorhanden – Host wird übersprungen."
+      when: not proxinvoke_template.stat.exists
+
+    - meta: end_host
+      when: not proxinvoke_template.stat.exists
+
+    - name: "03 Load VM configuration"
+      ansible.builtin.set_fact:
+        proxinvoke: "{{ lookup('template', 'templates/proxinvoke/' + inventory_hostname + '.yml.j2') | from_yaml }}"
+
+    - name: "04 Ensure configuration targets this host"
+      ansible.builtin.assert:
+        that:
+          - proxinvoke.target_host == inventory_hostname
+        fail_msg: "Konfiguration zielt auf einen anderen Host."
+
+    - name: "05 Check for required storage"
+
     - name: "02 Load VM configuration"
       ansible.builtin.set_fact:
         proxinvoke: "{{ lookup('template', 'templates/proxinvoke/' + inventory_hostname + '.yml.j2') | from_yaml }}"
@@ -17,6 +43,7 @@
         fail_msg: "Konfiguration zielt auf einen anderen Host." 
 
     - name: "04 Check for required storage"
+
       ansible.builtin.command: pvesm status
       register: storage_status
       changed_when: false
@@ -31,6 +58,7 @@
       ansible.builtin.command: qm list
       register: qm_list
       changed_when: false
+
 
     - name: "07 Create VM"
       ansible.builtin.command: >-
