@@ -18,8 +18,11 @@ Uptime: {{ hostvars[host].proxreport_data.uptime }}
 ## Block devices
 {{ hostvars[host].proxreport_data.block_devices | join('\\n') }}
 
-## Hardware details
-{{ hostvars[host].proxreport_data.hardware_details }}
+## CPU details
+{{ hostvars[host].proxreport_data.cpu_details | join('\\n') }}
+
+## Memory details
+{{ hostvars[host].proxreport_data.memory_details | join('\\n') }}
 
 ## Virtual machines
 {{ hostvars[host].proxreport_data.vm_list | join('\\n') }}

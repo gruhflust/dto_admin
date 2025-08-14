@@ -49,41 +49,43 @@
       ansible.builtin.debug:
         var: block_devices.stdout_lines
 
-    - name: "11 Ensure lshw is installed"
-      ansible.builtin.package:
-        name: lshw
-        state: present
-      become: true
-
-    - name: "12 Gather hardware details"
-      ansible.builtin.command: lshw -json
-      register: hardware_details
+    - name: "11 Gather CPU details"
+      ansible.builtin.command: lscpu
+      register: cpu_details
       changed_when: false
-      become: true
 
-    - name: "13 Show hardware details"
+    - name: "12 Display CPU details"
       ansible.builtin.debug:
-        var: hardware_details.stdout
+        var: cpu_details.stdout_lines
 
-    - name: "14 Get system uptime"
+    - name: "13 Gather memory details"
+      ansible.builtin.command: free -h
+      register: memory_details
+      changed_when: false
+
+    - name: "14 Display memory details"
+      ansible.builtin.debug:
+        var: memory_details.stdout_lines
+
+    - name: "15 Get system uptime"
       ansible.builtin.command: uptime -p
       register: uptime
       changed_when: false
 
-    - name: "15 Show system uptime"
+    - name: "16 Show system uptime"
       ansible.builtin.debug:
         var: uptime.stdout
 
-    - name: "16 List virtual machines"
+    - name: "17 List virtual machines"
       ansible.builtin.command: qm list
       register: vm_list
       changed_when: false
 
-    - name: "17 Show virtual machines"
+    - name: "18 Show virtual machines"
       ansible.builtin.debug:
         var: vm_list.stdout_lines
 
-    - name: "18 Collect data for report"
+    - name: "19 Collect data for report"
       ansible.builtin.set_fact:
         proxreport_data:
           storage_status: "{{ storage_status.stdout_lines }}"
@@ -91,13 +93,14 @@
           ip_addresses: "{{ ip_addr_output.stdout_lines }}"
           pve_version: "{{ pve_version.stdout_lines }}"
           block_devices: "{{ block_devices.stdout_lines }}"
-          hardware_details: "{{ hardware_details.stdout }}"
+          cpu_details: "{{ cpu_details.stdout_lines }}"
+          memory_details: "{{ memory_details.stdout_lines }}"
           uptime: "{{ uptime.stdout }}"
           creation_date: "{{ ansible_date_time.iso8601 }}"
           vm_list: "{{ vm_list.stdout_lines }}"
         cacheable: true
 
-    - name: Build Proxmox summary HTML
+    - name: "20 Build Proxmox summary HTML"
       ansible.builtin.template:
         src: templates/proxmox_summary.html.j2
         dest: proxmox-summary.html
