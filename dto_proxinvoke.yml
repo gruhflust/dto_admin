@@ -53,6 +53,9 @@
         --memory {{ proxinvoke.memory }}
         --cores {{ proxinvoke.cores }}
         --net0 {{ proxinvoke.networks[0] }}
+        {% if proxinvoke.smbios1 is defined %}
+        --smbios1 "uuid={{ proxinvoke.smbios1.uuid }},manufacturer={{ proxinvoke.smbios1.manufacturer }},product={{ proxinvoke.smbios1.product }}"
+        {% endif %}
       when: proxinvoke.vmid|string not in qm_list.stdout
 
     - name: "09 Configure disk"
