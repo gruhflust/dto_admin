@@ -84,6 +84,36 @@
         var: vm_list.stdout_lines
 
     - name: "18 Collect data for summary"
+
+    - name: "11 Gather hardware details"
+      ansible.builtin.command: lshw -json
+      register: hardware_details
+      changed_when: false
+
+    - name: "12 Show hardware details"
+      ansible.builtin.debug:
+        var: hardware_details.stdout
+
+    - name: "13 Get system uptime"
+      ansible.builtin.command: uptime -p
+      register: uptime
+      changed_when: false
+
+    - name: "14 Show system uptime"
+      ansible.builtin.debug:
+        var: uptime.stdout
+
+    - name: "15 List virtual machines"
+      ansible.builtin.command: qm list
+      register: vm_list
+      changed_when: false
+
+    - name: "16 Show virtual machines"
+      ansible.builtin.debug:
+        var: vm_list.stdout_lines
+
+    - name: "17 Collect data for summary"
+
       ansible.builtin.set_fact:
         proxstat_data:
           storage_status: "{{ storage_status.stdout_lines }}"

@@ -27,7 +27,10 @@ The playbook `dto_proxstat.yml` displays storage status, network configuration, 
 block devices, hardware details, the system uptime and the Proxmox version. It also lists
 virtual machines and generates `proxmox-summary.pdf` which summarises this information for
 each queried server on its own page and includes the report creation date.
+
 It ensures the `lshw` package is installed so hardware details can be collected.
+
+
 
 
 The playbook `dto_proxcomfort.yml` disables the subscription warning on a Proxmox host by
