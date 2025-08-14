@@ -1,0 +1,50 @@
+---
+- name: Show Proxmox host status
+  hosts: proxmox
+  gather_facts: true
+  tasks:
+    - name: "01 List storages"
+      ansible.builtin.command: pvesm status
+      register: storage_status
+      changed_when: false
+
+    - name: "02 Show storages"
+      ansible.builtin.debug:
+        var: storage_status.stdout_lines
+
+    - name: "03 List Proxmox network configuration"
+      ansible.builtin.command: >
+        pvesh get /nodes/{{ ansible_hostname }}/network --output-format json
+      register: network_config
+      changed_when: false
+
+    - name: "04 Show network configuration"
+      ansible.builtin.debug:
+        msg: "{{ network_config.stdout | from_json | to_nice_yaml }}"
+
+    - name: "05 Show IP addresses"
+      ansible.builtin.command: ip -o addr show
+      register: ip_addr_output
+      changed_when: false
+
+    - name: "06 Display IP addresses"
+      ansible.builtin.debug:
+        var: ip_addr_output.stdout_lines
+
+    - name: "07 Show Proxmox version"
+      ansible.builtin.command: pveversion
+      register: pve_version
+      changed_when: false
+
+    - name: "08 Display Proxmox version"
+      ansible.builtin.debug:
+        var: pve_version.stdout_lines
+
+    - name: "09 List block devices"
+      ansible.builtin.command: lsblk --output NAME,SIZE,TYPE,MOUNTPOINT
+      register: block_devices
+      changed_when: false
+
+    - name: "10 Show block devices"
+      ansible.builtin.debug:
+        var: block_devices.stdout_lines

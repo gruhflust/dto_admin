@@ -11,6 +11,7 @@ PS1='\[\e[36m\]$(hostname -I | cut -d" " -f1)\[\e[0m\] \[\e[32m\]\u\[\e[0m\] \[\
 
 # Convenience aliases for running Ansible playbooks with coloured YAML output
 alias admin='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml ANSIBLE_CALLBACKS_ENABLED=profile_tasks ansible-playbook -i inventory/hosts.ini dto_user.yml'
-alias prox='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml ANSIBLE_CALLBACKS_ENABLED=profile_tasks ansible-playbook -i inventory/hosts.ini dto_proxmox.yml'
+alias proxstat='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml ANSIBLE_CALLBACKS_ENABLED=profile_tasks ansible-playbook -i inventory/hosts.ini dto_proxstat.yml'
+alias proxcomfort='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml ANSIBLE_CALLBACKS_ENABLED=profile_tasks ansible-playbook -i inventory/hosts.ini dto_proxcomfort.yml'
 alias proxstor='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml ANSIBLE_CALLBACKS_ENABLED=profile_tasks ansible-playbook -i inventory/hosts.ini dto_proxstor.yml'
 alias proxdestroystor='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml ANSIBLE_CALLBACKS_ENABLED=profile_tasks ansible-playbook -i inventory/hosts.ini dto_proxdestroystor.yml'
