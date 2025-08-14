@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Proxmox Summary</title>
+  <style>
+    body { font-family: sans-serif; }
+    pre { background: #f4f4f4; padding: 0.5em; overflow-x: auto; }
+    .section { margin-bottom: 2em; page-break-after: always; }
+    .section:last-child { page-break-after: auto; }
+  </style>
+</head>
+<body>
+{% for host in groups['proxmox'] %}
+  <div class="section">
+    <h1>{{ hostvars[host].ansible_host | default(host) }} - {{ hostvars[host].ansible_hostname }}</h1>
+
+    <h2>Storage</h2>
+    <pre>{{ hostvars[host].proxstat_data.storage_status | join('\n') }}</pre>
+
+    <h2>Network</h2>
+    <pre>{{ hostvars[host].proxstat_data.network_config | to_nice_yaml }}</pre>
+
+    <h2>IP addresses</h2>
+    <pre>{{ hostvars[host].proxstat_data.ip_addresses | join('\n') }}</pre>
+
+    <h2>Proxmox version</h2>
+    <pre>{{ hostvars[host].proxstat_data.pve_version | join('\n') }}</pre>
+
+    <h2>Block devices</h2>
+    <pre>{{ hostvars[host].proxstat_data.block_devices | join('\n') }}</pre>
+  </div>
+{% endfor %}
+</body>
+</html>
