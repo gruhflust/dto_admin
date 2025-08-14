@@ -69,6 +69,7 @@
       notify:
         - Restart pvedaemon
         - Restart pveproxy
+        - Restart pvestatd
 
     - name: "09 List logical volumes"
       ansible.builtin.command: lvs --units g
@@ -97,4 +98,9 @@
     - name: Restart pveproxy
       ansible.builtin.service:
         name: pveproxy
+        state: restarted
+
+    - name: Restart pvestatd
+      ansible.builtin.service:
+        name: pvestatd
         state: restarted
