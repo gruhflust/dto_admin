@@ -49,6 +49,42 @@
       ansible.builtin.debug:
         var: block_devices.stdout_lines
 
+    - name: "11 Ensure lshw is installed"
+      ansible.builtin.package:
+        name: lshw
+        state: present
+      become: true
+
+    - name: "12 Gather hardware details"
+      ansible.builtin.command: lshw -json
+      register: hardware_details
+      changed_when: false
+      become: true
+
+    - name: "13 Show hardware details"
+      ansible.builtin.debug:
+        var: hardware_details.stdout
+
+    - name: "14 Get system uptime"
+      ansible.builtin.command: uptime -p
+      register: uptime
+      changed_when: false
+
+    - name: "15 Show system uptime"
+      ansible.builtin.debug:
+        var: uptime.stdout
+
+    - name: "16 List virtual machines"
+      ansible.builtin.command: qm list
+      register: vm_list
+      changed_when: false
+
+    - name: "17 Show virtual machines"
+      ansible.builtin.debug:
+        var: vm_list.stdout_lines
+
+    - name: "18 Collect data for summary"
+
     - name: "11 Gather hardware details"
       ansible.builtin.command: lshw -json
       register: hardware_details
@@ -77,6 +113,7 @@
         var: vm_list.stdout_lines
 
     - name: "17 Collect data for summary"
+
       ansible.builtin.set_fact:
         proxstat_data:
           storage_status: "{{ storage_status.stdout_lines }}"
