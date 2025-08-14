@@ -24,7 +24,8 @@ username and current directory in different colors.
 ### Proxmox playbooks
 
 The playbook `dto_proxstat.yml` displays storage status, network configuration, IP addresses,
-block devices and the Proxmox version.
+block devices and the Proxmox version. It also generates `proxmox-summary.pdf` which summarises
+this information for each queried server on its own page.
 
 The playbook `dto_proxcomfort.yml` disables the subscription warning on a Proxmox host by
 patching `/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js` and restarting the

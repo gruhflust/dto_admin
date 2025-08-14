@@ -1,0 +1,21 @@
+{% for host in groups['proxmox'] %}
+# {{ hostvars[host].ansible_host | default(host) }} - {{ hostvars[host].ansible_hostname }}
+
+## Storage
+{{ hostvars[host].proxstat_data.storage_status | join('\n') }}
+
+## Network
+{{ hostvars[host].proxstat_data.network_config | to_nice_yaml }}
+
+## IP addresses
+{{ hostvars[host].proxstat_data.ip_addresses | join('\n') }}
+
+## Proxmox version
+{{ hostvars[host].proxstat_data.pve_version | join('\n') }}
+
+## Block devices
+{{ hostvars[host].proxstat_data.block_devices | join('\n') }}
+{% if not loop.last %}
+\\newpage
+{% endif %}
+{% endfor %}

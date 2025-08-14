@@ -48,3 +48,30 @@
     - name: "10 Show block devices"
       ansible.builtin.debug:
         var: block_devices.stdout_lines
+
+
+    - name: "11 Collect data for summary"
+      ansible.builtin.set_fact:
+        proxstat_data:
+          storage_status: "{{ storage_status.stdout_lines }}"
+          network_config: "{{ network_config.stdout | from_json }}"
+          ip_addresses: "{{ ip_addr_output.stdout_lines }}"
+          pve_version: "{{ pve_version.stdout_lines }}"
+          block_devices: "{{ block_devices.stdout_lines }}"
+
+- name: Build Proxmox summary PDF
+  hosts: localhost
+  gather_facts: false
+  vars:
+    summary_markdown: proxmox-summary.md
+  tasks:
+    - name: Render Proxmox summary markdown
+      ansible.builtin.template:
+        src: templates/proxmox_summary.md.j2
+        dest: "{{ summary_markdown }}"
+
+    - name: Create Proxmox summary PDF
+      ansible.builtin.command:
+        cmd: pandoc {{ summary_markdown }} -o proxmox-summary.pdf
+      args:
+        creates: proxmox-summary.pdf
