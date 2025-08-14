@@ -54,7 +54,7 @@
         --cores {{ proxinvoke.cores }}
         --net0 {{ proxinvoke.networks[0] }}
         {% if proxinvoke.smbios1 is defined %}
-        --smbios1 uuid={{ proxinvoke.smbios1.uuid }},manufacturer="{{ proxinvoke.smbios1.manufacturer | regex_replace('\\.$', '') }}",product="{{ proxinvoke.smbios1.product }}"
+        --smbios1 uuid={{ proxinvoke.smbios1.uuid }}
         --args '-smbios type=1,uuid={{ proxinvoke.smbios1.uuid }},manufacturer="{{ proxinvoke.smbios1.manufacturer }}",product="{{ proxinvoke.smbios1.product }}"'
         {% endif %}
       when: proxinvoke.vmid|string not in qm_list.stdout
@@ -68,7 +68,8 @@
     - name: "10 Set SMBIOS parameters"
       ansible.builtin.command: >-
         qm set {{ proxinvoke.vmid }}
-        --smbios1 uuid={{ proxinvoke.smbios1.uuid }},manufacturer="{{ proxinvoke.smbios1.manufacturer | regex_replace('\\.$', '') }}",product="{{ proxinvoke.smbios1.product }}"
+        --smbios1 uuid={{ proxinvoke.smbios1.uuid }}
+        --args '-smbios type=1,uuid={{ proxinvoke.smbios1.uuid }},manufacturer="{{ proxinvoke.smbios1.manufacturer }}",product="{{ proxinvoke.smbios1.product }}"'
       when: proxinvoke.smbios1 is defined
 
     - name: "11 Check VM status"
