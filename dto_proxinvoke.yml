@@ -58,11 +58,11 @@
         {% endif %}
       when: proxinvoke.vmid|string not in qm_list.stdout
 
-      - name: "09 Configure disk"
-        ansible.builtin.command: >-
-          qm set {{ proxinvoke.vmid }}
-          --scsi0 {{ proxinvoke.storage }}:{{ proxinvoke.disk_size | regex_replace('[^0-9]', '') | int }},discard=on
-        when: proxinvoke.vmid|string not in qm_list.stdout
+    - name: "09 Configure disk"
+      ansible.builtin.command: >-
+        qm set {{ proxinvoke.vmid }}
+        --scsi0 {{ proxinvoke.storage }}:{{ proxinvoke.disk_size | regex_replace('[^0-9]', '') | int }},discard=on
+      when: proxinvoke.vmid|string not in qm_list.stdout
 
     - name: "10 Start VM"
       ansible.builtin.command: "qm start {{ proxinvoke.vmid }}"
