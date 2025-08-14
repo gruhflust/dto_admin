@@ -20,6 +20,7 @@
       notify:
         - Restart pvedaemon
         - Restart pveproxy
+        - Restart pvestatd
 
     - name: "03 Remove thin volumes"
       ansible.builtin.lvol:
@@ -69,4 +70,9 @@
     - name: Restart pveproxy
       ansible.builtin.service:
         name: pveproxy
+        state: restarted
+
+    - name: Restart pvestatd
+      ansible.builtin.service:
+        name: pvestatd
         state: restarted
