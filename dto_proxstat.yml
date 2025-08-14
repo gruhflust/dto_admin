@@ -95,7 +95,7 @@
           uptime: "{{ uptime.stdout }}"
           creation_date: "{{ ansible_date_time.iso8601 }}"
           vm_list: "{{ vm_list.stdout_lines }}"
-      cacheable: true
+        cacheable: true
 
     - name: Build Proxmox summary HTML
       ansible.builtin.template:
