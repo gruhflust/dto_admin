@@ -8,15 +8,10 @@
         proxstorage: "{{ lookup('template', 'templates/proxstorage/' + inventory_hostname + '.yml.j2') | from_yaml }}"
 
     - name: "02 Remove Proxmox storage configuration"
-      ansible.builtin.blockinfile:
-        path: /etc/pve/storage.cfg
-        marker: "# {mark} ANSIBLE MANAGED proxstorage"
-        block: |
-          lvmthin: {{ proxstorage.storage_name }}
-              thinpool {{ proxstorage.thinpool_name }}
-              vgname {{ proxstorage.vg_name }}
-              content rootdir,images
-        state: absent
+      ansible.builtin.command: "pvesm remove {{ proxstorage.storage_name }}"
+      register: remove_storage
+      failed_when: false
+      changed_when: remove_storage.rc == 0
       notify:
         - Restart pvedaemon
         - Restart pveproxy
