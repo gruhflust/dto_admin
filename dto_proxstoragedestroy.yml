@@ -17,42 +17,34 @@
         - Restart pveproxy
         - Restart pvestatd
 
-    - name: "03 Remove thin volumes"
-      ansible.builtin.lvol:
-        vg: "{{ proxstorage.vg_name }}"
-        lv: "{{ item }}"
-        state: absent
-        force: true
-      loop: "{{ proxstorage.thin_volumes }}"
-
-    - name: "04 Remove thin pool"
+    - name: "03 Remove thin pool"
       ansible.builtin.lvol:
         vg: "{{ proxstorage.vg_name }}"
         thinpool: "{{ proxstorage.thinpool_name }}"
         state: absent
         force: true
 
-    - name: "05 Remove volume group"
+    - name: "04 Remove volume group"
       ansible.builtin.lvg:
         vg: "{{ proxstorage.vg_name }}"
         state: absent
         force: true
 
-    - name: "06 List logical volumes"
+    - name: "05 List logical volumes"
       ansible.builtin.command: lvs --units g
       register: lvs_output
       changed_when: false
 
-    - name: "07 Show logical volumes"
+    - name: "06 Show logical volumes"
       ansible.builtin.debug:
         var: lvs_output.stdout_lines
 
-    - name: "08 List storages"
+    - name: "07 List storages"
       ansible.builtin.command: pvesm status
       register: storage_status
       changed_when: false
 
-    - name: "09 Show storages"
+    - name: "08 Show storages"
       ansible.builtin.debug:
         var: storage_status.stdout_lines
 

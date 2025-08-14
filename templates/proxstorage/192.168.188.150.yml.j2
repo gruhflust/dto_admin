@@ -10,15 +10,9 @@ storage_name: dto-lvmthin
 # Volume Group auf dem Host, die als Basis für den Thin-Pool dient.
 vg_name: vg0
 
-# Name des Thin-Pools innerhalb der Volume Group. In diesem Pool werden die
-# folgenden Thin-Volumes angelegt.
+# Name des Thin-Pools innerhalb der Volume Group.
 thinpool_name: tp0
 
-# Liste der zu erstellenden Thin-Volumes. Neue Einträge hinzufügen oder bestehende
-# entfernen, um die Anzahl der Volumes anzupassen.
-thin_volumes:
-  - thinlv1
-  - thinlv2
-
-# Größe der einzelnen Thin-Volumes. Angabe in g/GiB, m/MiB usw.
-thin_volume_size: 100g
+# Thin-Volumes werden nicht mehr vorab erstellt. Der gesamte freie Platz
+# steht als Thin-Pool zur Verfügung und einzelne VM-Disks werden bei Bedarf
+# automatisch durch Proxmox angelegt.
