@@ -28,3 +28,9 @@ memory: 5000
 # Netzwerkdefinitionen. Weitere Einträge können ergänzt werden.
 networks:
   - virtio,bridge=vmbr0
+
+# SMBIOS (type1) configuration for the VM.
+smbios1:
+  uuid: 2c269505-717e-490b-a1cb-a089cc71e9c8
+  manufacturer: "Dell Inc."
+  product: "PowerEdge R730"
