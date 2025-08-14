@@ -31,8 +31,11 @@
     <h2>Block devices</h2>
     <pre>{{ hostvars[host].proxreport_data.block_devices | join('\n') }}</pre>
 
-    <h2>Hardware details</h2>
-    <pre>{{ hostvars[host].proxreport_data.hardware_details }}</pre>
+    <h2>CPU details</h2>
+    <pre>{{ hostvars[host].proxreport_data.cpu_details | join('\n') }}</pre>
+
+    <h2>Memory details</h2>
+    <pre>{{ hostvars[host].proxreport_data.memory_details | join('\n') }}</pre>
 
     <h2>Virtual machines</h2>
     <pre>{{ hostvars[host].proxreport_data.vm_list | join('\n') }}</pre>
