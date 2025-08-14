@@ -1,8 +1,24 @@
-# Storage configuration for {{ inventory_hostname }}
+# Storage-Konfiguration für {{ inventory_hostname }}
+#
+# Diese Jinja2-Vorlage beschreibt die Parameter für eine LVM-thin-Provisioning-
+# Storage-Konfiguration. Durch Anpassung der folgenden Werte kann die gewünschte
+# Speicherstruktur auf dem Proxmox-Host erstellt werden.
+
+# Name des Storage in Proxmox, unter dem er im Webinterface angezeigt wird.
 storage_name: dto-lvmthin
+
+# Volume Group auf dem Host, die als Basis für den Thin-Pool dient.
 vg_name: vg0
+
+# Name des Thin-Pools innerhalb der Volume Group. In diesem Pool werden die
+# folgenden Thin-Volumes angelegt.
 thinpool_name: tp0
+
+# Liste der zu erstellenden Thin-Volumes. Neue Einträge hinzufügen oder bestehende
+# entfernen, um die Anzahl der Volumes anzupassen.
 thin_volumes:
   - thinlv1
   - thinlv2
+
+# Größe der einzelnen Thin-Volumes. Angabe in g/GiB, m/MiB usw.
 thin_volume_size: 10g
