@@ -1,28 +1,28 @@
-Report generated: {{ hostvars[ansible_play_hosts[0]].proxstat_data.creation_date | default('N/A') }}
+Report generated: {{ hostvars[ansible_play_hosts[0]].proxreport_data.creation_date | default('N/A') }}
 
 {% for host in ansible_play_hosts %}
-{% if hostvars[host].proxstat_data is defined %}
+{% if hostvars[host].proxreport_data is defined %}
 # {{ hostvars[host].ansible_host | default(host) }} - {{ hostvars[host].ansible_hostname }}
-Proxmox version: {{ hostvars[host].proxstat_data.pve_version | join(', ') }}
-Uptime: {{ hostvars[host].proxstat_data.uptime }}
+Proxmox version: {{ hostvars[host].proxreport_data.pve_version | join(', ') }}
+Uptime: {{ hostvars[host].proxreport_data.uptime }}
 
 ## Storage
-{{ hostvars[host].proxstat_data.storage_status | join('\\n') }}
+{{ hostvars[host].proxreport_data.storage_status | join('\\n') }}
 
 ## Network
-{{ hostvars[host].proxstat_data.network_config | to_nice_yaml }}
+{{ hostvars[host].proxreport_data.network_config | to_nice_yaml }}
 
 ## IP addresses
-{{ hostvars[host].proxstat_data.ip_addresses | join('\\n') }}
+{{ hostvars[host].proxreport_data.ip_addresses | join('\\n') }}
 
 ## Block devices
-{{ hostvars[host].proxstat_data.block_devices | join('\\n') }}
+{{ hostvars[host].proxreport_data.block_devices | join('\\n') }}
 
 ## Hardware details
-{{ hostvars[host].proxstat_data.hardware_details }}
+{{ hostvars[host].proxreport_data.hardware_details }}
 
 ## Virtual machines
-{{ hostvars[host].proxstat_data.vm_list | join('\\n') }}
+{{ hostvars[host].proxreport_data.vm_list | join('\\n') }}
 {% if not loop.last %}
 \\newpage
 {% endif %}

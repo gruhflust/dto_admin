@@ -5,16 +5,16 @@
   tasks:
     - name: "01 Load storage configuration"
       ansible.builtin.set_fact:
-        proxstor: "{{ lookup('template', 'templates/proxstor/' + inventory_hostname + '.yml.j2') | from_yaml }}"
+        proxstorage: "{{ lookup('template', 'templates/proxstorage/' + inventory_hostname + '.yml.j2') | from_yaml }}"
 
     - name: "02 Remove Proxmox storage configuration"
       ansible.builtin.blockinfile:
         path: /etc/pve/storage.cfg
-        marker: "# {mark} ANSIBLE MANAGED proxstor"
+        marker: "# {mark} ANSIBLE MANAGED proxstorage"
         block: |
-          lvmthin: {{ proxstor.storage_name }}
-              thinpool {{ proxstor.thinpool_name }}
-              vgname {{ proxstor.vg_name }}
+          lvmthin: {{ proxstorage.storage_name }}
+              thinpool {{ proxstorage.thinpool_name }}
+              vgname {{ proxstorage.vg_name }}
               content rootdir,images
         state: absent
       notify:
@@ -23,22 +23,22 @@
 
     - name: "03 Remove thin volumes"
       ansible.builtin.lvol:
-        vg: "{{ proxstor.vg_name }}"
+        vg: "{{ proxstorage.vg_name }}"
         lv: "{{ item }}"
         state: absent
         force: true
-      loop: "{{ proxstor.thin_volumes }}"
+      loop: "{{ proxstorage.thin_volumes }}"
 
     - name: "04 Remove thin pool"
       ansible.builtin.lvol:
-        vg: "{{ proxstor.vg_name }}"
-        thinpool: "{{ proxstor.thinpool_name }}"
+        vg: "{{ proxstorage.vg_name }}"
+        thinpool: "{{ proxstorage.thinpool_name }}"
         state: absent
         force: true
 
     - name: "05 Remove volume group"
       ansible.builtin.lvg:
-        vg: "{{ proxstor.vg_name }}"
+        vg: "{{ proxstorage.vg_name }}"
         state: absent
         force: true
 
