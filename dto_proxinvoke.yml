@@ -8,8 +8,9 @@
 
     - name: "02 Check for host configuration"
       ansible.builtin.stat:
-        path: "templates/proxinvoke/{{ inventory_hostname }}.yml.j2"
+        path: "{{ playbook_dir }}/templates/proxinvoke/{{ inventory_hostname }}.yml.j2"
       register: proxinvoke_template
+      delegate_to: localhost
 
     - name: "02a Skip host without configuration"
       ansible.builtin.debug:
@@ -21,7 +22,7 @@
 
     - name: "03 Load VM configuration"
       ansible.builtin.set_fact:
-        proxinvoke: "{{ lookup('template', 'templates/proxinvoke/' + inventory_hostname + '.yml.j2') | from_yaml }}"
+        proxinvoke: "{{ lookup('template', playbook_dir ~ '/templates/proxinvoke/' ~ inventory_hostname ~ '.yml.j2') | from_yaml }}"
 
     - name: "04 Ensure configuration targets this host"
       ansible.builtin.assert:
