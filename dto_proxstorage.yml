@@ -56,35 +56,38 @@
       loop: "{{ proxstorage.thin_volumes }}"
       when: vg_check.rc != 0
 
-    - name: "08 Configure Proxmox storage"
-      ansible.builtin.blockinfile:
-        path: /etc/pve/storage.cfg
-        marker: "# {mark} ANSIBLE MANAGED proxstorage"
-        block: |
-          lvmthin: {{ proxstorage.storage_name }}
-              thinpool {{ proxstorage.thinpool_name }}
-              vgname {{ proxstorage.vg_name }}
-              content rootdir,images
-        create: true
+    - name: "08 Check for existing storage definition"
+      ansible.builtin.command: pvesm status
+      register: pvesm_status
+      changed_when: false
+
+    - name: "09 Configure Proxmox storage"
+      ansible.builtin.command: >-
+        pvesm add lvmthin {{ proxstorage.storage_name }}
+        -vgname {{ proxstorage.vg_name }}
+        -thinpool {{ proxstorage.thinpool_name }}
+        -content rootdir,images
+      when: proxstorage.storage_name not in pvesm_status.stdout
       notify:
         - Restart pvedaemon
         - Restart pveproxy
+        - Restart pvestatd
 
-    - name: "09 List logical volumes"
+    - name: "10 List logical volumes"
       ansible.builtin.command: lvs --units g
       register: lvs_output
       changed_when: false
 
-    - name: "10 Show logical volumes"
+    - name: "11 Show logical volumes"
       ansible.builtin.debug:
         var: lvs_output.stdout_lines
 
-    - name: "11 List storages"
+    - name: "12 List storages"
       ansible.builtin.command: pvesm status
       register: storage_status
       changed_when: false
 
-    - name: "12 Show storages"
+    - name: "13 Show storages"
       ansible.builtin.debug:
         var: storage_status.stdout_lines
 
@@ -97,4 +100,9 @@
     - name: Restart pveproxy
       ansible.builtin.service:
         name: pveproxy
+        state: restarted
+
+    - name: Restart pvestatd
+      ansible.builtin.service:
+        name: pvestatd
         state: restarted
