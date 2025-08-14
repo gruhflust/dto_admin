@@ -36,8 +36,8 @@ auch mehrere Proxmox‑Server. Alle Verbindungen erfolgen als Benutzer `root`.
   `dto_proxstoragedestroy.yml` macht diese Änderungen rückgängig.
 - `dto_proxinvoke.yml` erstellt neue virtuelle Maschinen. Alle
   VM‑Einstellungen wie `vmid`, `name`, `target_host`, `storage`,
-  `disk_size` (in GiB), `cores`, `memory` und `networks` stammen aus der
-  Datei `templates/proxinvoke/<inventory_hostname>.yml.j2`.
+  `disk_size` (GiB, optional mit "G"‑Suffix), `cores`, `memory` und `networks`
+  stammen aus der Datei `templates/proxinvoke/<inventory_hostname>.yml.j2`.
   Die gleiche Vorlage nutzt `dto_proxrevoke.yml`, um VMs wieder zu
   entfernen.
 
