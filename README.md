@@ -1,66 +1,125 @@
 # dto_admin
 
-This repository collects Ansible playbooks that can manipulate a remote client.
-Currently it provides a playbook to update a client and create the user "ironscope".
-The playbook works across common Linux distributions such as Debian/Ubuntu/Mint,
-RedHat-based systems, SUSE variants and Alpine, automatically detecting the
-target system and its display manager before applying changes.
+## Überblick (Deutsch)
 
-## Usage
+Dieses Repository enthält eine Sammlung von Ansible‑Playbooks zur Verwaltung
+entfernter Linux‑Rechner sowie zur Automatisierung von Proxmox‑Hosts.
 
-The inventory `inventory/hosts.ini` contains the Debian host `192.168.188.121` and the Proxmox host `192.168.188.150`. Both use
-the user `root` for the connection.
+### Voraussetzungen
+- Passwortloser SSH‑Zugang als `root` zu allen Zielsystemen
+- Installiertes [Ansible](https://www.ansible.com/) auf dem Administrationsrechner
 
-### User management
+### Inventory
+Das Inventory `inventory/hosts.ini` definiert sowohl klassische Linux‑Hosts als
+auch mehrere Proxmox‑Server. Alle Verbindungen erfolgen als Benutzer `root`.
 
-The playbook `dto_user.yml` ensures that the user `ironscope` exists, creates a home directory,
-adds the user to the appropriate admin group for the detected distribution and forces a
-password change at the first login.
-It then updates the target host system using the correct package manager, installs the
-package `rclone`, creates the directory `onedrive` in the home directory and sets `/bin/bash`
-as the default shell. Finally, it installs a colorful prompt that displays IP address,
-username and current directory in different colors.
+### Playbooks
 
-### Proxmox playbooks
+#### Benutzerverwaltung
+- `dto_user.yml` legt den Benutzer `ironscope` an, fügt ihn der passenden
+  Administrationsgruppe hinzu, erzwingt beim ersten Login ein Passwort‑Update
+  und installiert Werkzeuge wie `rclone` sowie eine farbige Shell‑Prompt.
+- `dto_userhome.yml` richtet das Home‑Verzeichnis von `ironscope` ein,
+  inklusive `onedrive`‑Ordner und einer aus `templates/bashrc.j2`
+  generierten `.bashrc`.
 
-The playbook `dto_proxreport.yml` displays storage status, network configuration, IP addresses,
-block devices, hardware details, the system uptime and the Proxmox version. It also lists
-virtual machines and generates `proxmox-summary.pdf` which summarises this information for
-each queried server on its own page and includes the report creation date.
+#### Proxmox‑Playbooks
+- `dto_proxreport.yml` ermittelt Storage‑Status, Netzwerk‑ und Hardware‑Daten
+  und erzeugt aus den Vorlagen `templates/proxmox_summary.md.j2` und
+  `templates/proxmox_summary.html.j2` einen Bericht `proxmox-summary.pdf`.
+- `dto_proxcomfort.yml` entfernt den Subskriptionshinweis auf einem
+  Proxmox‑Host und installiert eine farbige Prompt für `root`.
+- `dto_proxstorage.yml` richtet zusätzliche LVM‑Thin‑Storage ein. Die
+  Parameter werden pro Host in
+  `templates/proxstorage/<inventory_hostname>.yml.j2`
+  definiert (z.B. `storage_name`, `vg_name`, `thinpool_name`,
+  `thin_volumes`, `thin_volume_size`).
+  `dto_proxstoragedestroy.yml` macht diese Änderungen rückgängig.
+- `dto_proxinvoke.yml` erstellt neue virtuelle Maschinen. Alle
+  VM‑Einstellungen wie `vmid`, `name`, `target_host`, `storage`,
+  `disk_size`, `cores`, `memory` und `networks` stammen aus der
+  Datei `templates/proxinvoke/<inventory_hostname>.yml.j2`.
+  Die gleiche Vorlage nutzt `dto_proxrevoke.yml`, um VMs wieder zu
+  entfernen.
 
-It ensures the `lshw` package is installed so hardware details can be collected.
+### Ausführung
 
+Playbooks können direkt oder über in `.bashrc` definierte Aliase
+aufgerufen werden:
 
+```bash
+# direkte Ausführung
+ansible-playbook -i inventory/hosts.ini dto_user.yml            # Alias: admin
 
+# Proxmox
+ansible-playbook -i inventory/hosts.ini dto_proxreport.yml      # Alias: proxreport
+ansible-playbook -i inventory/hosts.ini dto_proxcomfort.yml     # Alias: proxcomfort
+ansible-playbook -i inventory/hosts.ini dto_proxstorage.yml     # Alias: proxstorage
+ansible-playbook -i inventory/hosts.ini dto_proxstoragedestroy.yml # Alias: proxstoragedestroy
+ansible-playbook -i inventory/hosts.ini dto_proxinvoke.yml      # Alias: proxinvoke
+ansible-playbook -i inventory/hosts.ini dto_proxrevoke.yml      # Alias: proxrevoke
 
-The playbook `dto_proxcomfort.yml` disables the subscription warning on a Proxmox host by
-patching `/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js` and restarting the
-`pveproxy` service. It also installs a colourful prompt for the root user.
+# mittels Alias
+admin
+proxreport
+proxcomfort
+proxstorage
+proxstoragedestroy
+proxinvoke
+proxrevoke
+```
 
-The playbook `dto_proxstorage.yml` prepares additional LVM storage on a Proxmox host. It locates
-the first unused block device, creates a volume group and a thin pool that spans the entire
-device and provisions several thin volumes. Parameters such as the volume group name, thin
-pool and thin volume sizes are defined in host-specific Jinja files under `templates/proxstorage`
-and can be adjusted per target host. After execution the playbook prints a summary of the
-available Proxmox storages. Running the playbook again will recognise an existing volume group
-and simply report the current status without failing.
+### Versionierung
+Aktuelle Version: 0.1.0‑beta. Eine stabile 1.0.0‑Version wird später
+veröffentlicht.
 
-The playbook also writes a matching entry to `/etc/pve/storage.cfg` and restarts the
-`pvedaemon` and `pveproxy` services so that Proxmox recognises the new storage.
+---
 
-The complementary playbook `dto_proxstoragedestroy.yml` removes the storage entry, the thin
-volumes, the thin pool and the volume group again, undoing the changes made by
-`dto_proxstorage.yml`.
+## Overview (English)
 
-The playbook `dto_proxinvoke.yml` provisioniert eine neue virtuelle Maschine auf
-einem Proxmox-Host. Es lädt alle relevanten Parameter – Name, Zielhost,
-Festplattengröße, CPU-, Speicher- und Netzwerkkonfiguration – aus
-host­spezifischen Jinja-Dateien unter `templates/proxinvoke`. Vor der
-Erstellung wird geprüft, ob der Zielhost sowie das angegebene Storage vorhanden
-sind. Existiert die Maschine noch nicht, wird sie erzeugt und gestartet.
+This repository provides Ansible playbooks for managing remote Linux
+machines and automating Proxmox hosts.
 
+### Requirements
+- Passwordless SSH access as `root` to all target systems
+- [Ansible](https://www.ansible.com/) installed on the control node
 
-Run the playbooks either directly or via the convenience aliases defined in `.bashrc`:
+### Inventory
+The inventory file `inventory/hosts.ini` lists both standard Linux hosts and
+multiple Proxmox servers. All connections use the `root` user.
+
+### Playbooks
+
+#### User management
+- `dto_user.yml` creates the `ironscope` user, adds it to the proper admin
+  group, forces a password change on first login and installs tools like
+  `rclone` along with a colourful shell prompt.
+- `dto_userhome.yml` prepares the home directory of `ironscope`, including
+  an `onedrive` folder and a `.bashrc` generated from `templates/bashrc.j2`.
+
+#### Proxmox playbooks
+- `dto_proxreport.yml` gathers storage, network and hardware information and
+  builds `proxmox-summary.pdf` using the templates
+  `templates/proxmox_summary.md.j2` and
+  `templates/proxmox_summary.html.j2`.
+- `dto_proxcomfort.yml` removes the subscription warning on a Proxmox host
+  and installs a colourful prompt for `root`.
+- `dto_proxstorage.yml` sets up additional LVM thin storage. Host specific
+  parameters are stored in
+  `templates/proxstorage/<inventory_hostname>.yml.j2`
+  (e.g. `storage_name`, `vg_name`, `thinpool_name`, `thin_volumes`,
+  `thin_volume_size`).
+  `dto_proxstoragedestroy.yml` reverses these changes.
+- `dto_proxinvoke.yml` provisions new virtual machines. All VM parameters
+  (`vmid`, `name`, `target_host`, `storage`, `disk_size`, `cores`,
+  `memory`, `networks`) are loaded from
+  `templates/proxinvoke/<inventory_hostname>.yml.j2`.
+  The same template is used by `dto_proxrevoke.yml` to remove VMs.
+
+### Running the playbooks
+
+Playbooks can be executed directly or via the aliases defined in
+`.bashrc`:
 
 ```bash
 # direct commands
@@ -71,8 +130,8 @@ ansible-playbook -i inventory/hosts.ini dto_proxreport.yml      # alias: proxrep
 ansible-playbook -i inventory/hosts.ini dto_proxcomfort.yml     # alias: proxcomfort
 ansible-playbook -i inventory/hosts.ini dto_proxstorage.yml     # alias: proxstorage
 ansible-playbook -i inventory/hosts.ini dto_proxstoragedestroy.yml # alias: proxstoragedestroy
-ansible-playbook -i inventory/hosts.ini dto_proxinvoke.yml     # alias: proxinvoke
-ansible-playbook -i inventory/hosts.ini dto_proxrevoke.yml     # alias: proxrevoke
+ansible-playbook -i inventory/hosts.ini dto_proxinvoke.yml      # alias: proxinvoke
+ansible-playbook -i inventory/hosts.ini dto_proxrevoke.yml      # alias: proxrevoke
 
 # using aliases
 admin
@@ -84,6 +143,5 @@ proxinvoke
 proxrevoke
 ```
 
-## Versioning
-
-Current version: 0.1.0-beta. A stable 1.0.0 release will be defined in the future.
+### Versioning
+Current version: 0.1.0-beta. A stable 1.0.0 release will be defined later.
