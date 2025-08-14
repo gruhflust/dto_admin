@@ -54,7 +54,7 @@
         --cores {{ proxinvoke.cores }}
         --net0 {{ proxinvoke.networks[0] }}
         {% if proxinvoke.smbios1 is defined %}
-        --smbios1 uuid={{ proxinvoke.smbios1.uuid }},manufacturer={{ proxinvoke.smbios1.manufacturer | quote }},product={{ proxinvoke.smbios1.product | quote }}
+        --smbios1 uuid={{ proxinvoke.smbios1.uuid }},manufacturer={{ proxinvoke.smbios1.manufacturer | regex_replace(' ', '\\s') }},product={{ proxinvoke.smbios1.product | regex_replace(' ', '\\s') }}
         --args '-smbios type=1,uuid={{ proxinvoke.smbios1.uuid }},manufacturer="{{ proxinvoke.smbios1.manufacturer }}",product="{{ proxinvoke.smbios1.product }}"'
         {% endif %}
       when: proxinvoke.vmid|string not in qm_list.stdout
@@ -68,16 +68,15 @@
     - name: "10 Set SMBIOS parameters"
       ansible.builtin.command: >-
         qm set {{ proxinvoke.vmid }}
-        --smbios1 uuid={{ proxinvoke.smbios1.uuid }},manufacturer={{ proxinvoke.smbios1.manufacturer | quote }},product={{ proxinvoke.smbios1.product | quote }}
+        --smbios1 uuid={{ proxinvoke.smbios1.uuid }},manufacturer={{ proxinvoke.smbios1.manufacturer | regex_replace(' ', '\\s') }},product={{ proxinvoke.smbios1.product | regex_replace(' ', '\\s') }}
       when: proxinvoke.smbios1 is defined
 
-
+    - name: "11 Check VM status"
       ansible.builtin.command: "qm status {{ proxinvoke.vmid }}"
       register: vm_status
       changed_when: false
 
-
-    - name: "11 Display VM status"
+    - name: "12 Display VM status"
       ansible.builtin.debug:
         var: vm_status.stdout_lines
 
