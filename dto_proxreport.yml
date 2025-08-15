@@ -54,6 +54,28 @@
       register: cpu_details
       changed_when: false
 
+    - name: "12b Gather SMBIOS system information"
+      ansible.builtin.command: dmidecode -s system-manufacturer
+      register: system_manufacturer
+      changed_when: false
+
+    - name: "12c Gather SMBIOS product name"
+      ansible.builtin.command: dmidecode -s system-product-name
+      register: system_product
+      changed_when: false
+
+    - name: "12d Gather SMBIOS UUID"
+      ansible.builtin.command: dmidecode -s system-uuid
+      register: system_uuid
+      changed_when: false
+
+    - name: "12e Display SMBIOS information"
+      ansible.builtin.debug:
+        msg:
+          - "Manufacturer: {{ system_manufacturer.stdout }}"
+          - "Product: {{ system_product.stdout }}"
+          - "UUID: {{ system_uuid.stdout }}"
+
     - name: "12 Display CPU details"
       ansible.builtin.debug:
         var: cpu_details.stdout_lines
@@ -98,6 +120,10 @@
           uptime: "{{ uptime.stdout }}"
           creation_date: "{{ ansible_date_time.iso8601 }}"
           vm_list: "{{ vm_list.stdout_lines }}"
+          manufacturer: "{{ system_manufacturer.stdout }}"
+          product: "{{ system_product.stdout }}"
+          uuid: "{{ system_uuid.stdout }}"
+
         cacheable: true
 
     - name: "20 Build Proxmox summary HTML"
