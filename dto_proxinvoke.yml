@@ -1,8 +1,4 @@
 ---
-# dto_proxinvoke.yml — v0.2.0
-# - GUI: set smbios1 without quotes; dot im Manufacturer wird nur für GUI entfernt
-# - Guest: exact strings (inkl. Punkt) via --args -smbios
-
 - name: Create Proxmox virtual machines
   hosts: proxmox
   gather_facts: true
@@ -51,23 +47,11 @@
       register: qm_list
       changed_when: false
 
-    # ---------- Build GUI-safe smbios1 (no quotes; dot entfernt NUR für GUI) ----------
-    - name: "07b Build smbios1 for GUI"
-      ansible.builtin.set_fact:
-        smbios1_gui: >-
-          uuid={{ proxinvoke.smbios1.uuid }},
-          manufacturer={{ (proxinvoke.smbios1.manufacturer | string | regex_replace('\.', '')) }},
-          product={{ (proxinvoke.smbios1.product | string) }}
-      when: proxinvoke.smbios1 is defined
-      changed_when: false
-
-    # ---------- Build exact QEMU -smbios (mit Punkt, mit Quotes) ----------
-    - name: "07c Build exact -smbios for guest"
+    # ---------- Build exact QEMU -smbios (Gast sieht exakt die Strings mit Punkt) ----------
+    - name: "07b Build exact -smbios args"
       ansible.builtin.set_fact:
         smbios_args_exact: >-
-          -smbios type=1,uuid={{ proxinvoke.smbios1.uuid }},
-          manufacturer="{{ proxinvoke.smbios1.manufacturer }}",
-          product="{{ proxinvoke.smbios1.product }}"
+          -smbios type=1,uuid={{ proxinvoke.smbios1.uuid }},manufacturer="{{ proxinvoke.smbios1.manufacturer }}",product="{{ proxinvoke.smbios1.product }}"
       when: proxinvoke.smbios1 is defined
       changed_when: false
 
@@ -80,7 +64,7 @@
         --cores {{ proxinvoke.cores }}
         --net0 {{ proxinvoke.networks[0] }}
         {% if proxinvoke.smbios1 is defined %}
-        --smbios1 "{{ smbios1_gui }}"
+        --smbios1 uuid={{ proxinvoke.smbios1.uuid }}
         --args '{{ smbios_args_exact }}'
         {% endif %}
       when: proxinvoke.vmid|string not in qm_list.stdout
@@ -92,15 +76,12 @@
         --scsi0 {{ proxinvoke.storage }}:{{ proxinvoke.disk_size | regex_replace('[^0-9]', '') | int }},discard=on
       when: proxinvoke.vmid|string not in qm_list.stdout
 
-    # ---------- Ensure SMBIOS stays consistent ----------
-    - name: "10 Set exact SMBIOS (guest) + GUI smbios1"
+    # ---------- Ensure args stay applied ----------
+    - name: "10 Set SMBIOS args again (idempotent)"
       ansible.builtin.command: >-
-        qm set {{ proxinvoke.vmid }}
-        --args '{{ smbios_args_exact }}'
-        --smbios1 "{{ smbios1_gui }}"
+        qm set {{ proxinvoke.vmid }} --args '{{ smbios_args_exact }}'
       when: proxinvoke.smbios1 is defined
 
-    # ---------- Status / Verification ----------
     - name: "11 Check VM status"
       ansible.builtin.command: "qm status {{ proxinvoke.vmid }}"
       register: vm_status
@@ -109,12 +90,3 @@
     - name: "12 Display VM status"
       ansible.builtin.debug:
         var: vm_status.stdout_lines
-
-    - name: "13 Verify smbios1 in config"
-      ansible.builtin.command: "qm config {{ proxinvoke.vmid }}"
-      register: qm_cfg
-      changed_when: false
-
-    - name: "14 Show smbios1 line"
-      ansible.builtin.debug:
-        msg: "{{ (qm_cfg.stdout_lines | select('match', '^smbios1:') | list | first) | default('smbios1: <not found>') }}"
