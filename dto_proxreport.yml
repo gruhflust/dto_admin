@@ -1,8 +1,11 @@
 ---
+# dto_proxreport.yml — v0.2.1
+# - Fix: no loop on block; loop only on tasks
+# - Adds SMBIOS collection per VM via qm config / qm showcmd
+
 - name: Show Proxmox host status
   hosts: proxmox
   gather_facts: true
-
   tasks:
     - name: "01 List storages"
       ansible.builtin.command: pvesm status
@@ -77,76 +80,56 @@
       ansible.builtin.debug:
         var: uptime.stdout
 
-    # -------- VM-Liste als JSON ziehen --------
-    - name: "17 List virtual machines (JSON)"
-      ansible.builtin.command: >
-        pvesh get /nodes/{{ ansible_hostname }}/qemu --output-format json
-      register: vm_list_json
+    - name: "17 List virtual machines"
+      ansible.builtin.command: qm list
+      register: vm_list
       changed_when: false
 
-    - name: "17a Parse VM list"
+    - name: "18 Extract VMIDs"
+      ansible.builtin.command: bash -lc "qm list | awk 'NR>1 {print $1}'"
+      register: vmids_raw
+      changed_when: false
+
+    - name: "19 Set VMID list"
       ansible.builtin.set_fact:
-        vm_list_parsed: "{{ vm_list_json.stdout | from_json | default([]) }}"
-        vm_smbios_info: []
+        vmids: "{{ vmids_raw.stdout_lines | select('match','^\\d+$') | list }}"
+
+    # -------- Für jede VM SMBIOS sammeln (ohne loop auf block!) --------
+    - name: "20 Collect SMBIOS with qm config"
+      ansible.builtin.command: "qm config {{ item }}"
+      register: qm_cfg_per_vm
+      loop: "{{ vmids }}"
+      loop_control:
+        label: "vmid={{ item }}"
       changed_when: false
 
-    # -------- Für jede VM SMBIOS sammeln --------
-    - name: "18 Collect SMBIOS from qm config and showcmd"
-      block:
-        - name: "18a Get qm config"
-          ansible.builtin.command: "qm config {{ item.vmid }}"
-          register: vm_cfg
-          changed_when: false
-
-        - name: "18b Extract smbios1 line (if present)"
-          ansible.builtin.set_fact:
-            _smbios1_line: "{{ (vm_cfg.stdout_lines | select('match', '^smbios1:') | list | first) | default('') }}"
-          changed_when: false
-
-        - name: "18c Build map from smbios1 (uuid/manufacturer/product)"
-          ansible.builtin.set_fact:
-            _map_cfg: "{{ dict(_smbios1_line | regex_findall('([a-z]+)=([^,\\s]+)')) 
-                          | combine(dict(_smbios1_line | regex_findall('([a-z]+)=\"?([^\",]+)\"?'))) }}"
-          changed_when: false
-
-        - name: "18d Get qm showcmd (pretty)"
-          ansible.builtin.command: "qm showcmd {{ item.vmid }} --pretty"
-          register: vm_showcmd
-          changed_when: false
-
-        - name: "18e Extract '-smbios type=1,...' segment"
-          ansible.builtin.set_fact:
-            _smbios_seg: >-
-              {{ vm_showcmd.stdout
-                  | regex_replace('(?s)^.*-smbios type=1,', '')
-                  | regex_replace('(?s)\\s-.*$', '') }}
-          changed_when: false
-
-        - name: "18f Build map from showcmd smbios (quotes ok)"
-          ansible.builtin.set_fact:
-            _map_args: "{{ dict(_smbios_seg | regex_findall('([a-z]+)=\\\"?([^\\\",]+)\\\"?')) }}"
-          changed_when: false
-
-        - name: "18g Compose final per-VM SMBIOS dict"
-          ansible.builtin.set_fact:
-            vm_smbios_info: >-
-              {{ vm_smbios_info + [ {
-                  'vmid': item.vmid,
-                  'name': item.name | default(''),
-                  'uuid': (_map_cfg.uuid | default(_map_args.uuid | default(''))),
-                  'manufacturer': (_map_cfg.manufacturer | default(_map_args.manufacturer | default(''))),
-                  'product': (_map_cfg.product | default(_map_args.product | default('')))
-                } ] }}
-          changed_when: false
-      loop: "{{ vm_list_parsed }}"
+    - name: "21 Collect QEMU showcmd (pretty)"
+      ansible.builtin.command: "qm showcmd {{ item }} --pretty"
+      register: qm_showcmd_per_vm
+      loop: "{{ vmids }}"
       loop_control:
-        label: "{{ item.vmid }}"
+        label: "vmid={{ item }}"
+      changed_when: false
 
-    - name: "18h Show VM SMBIOS summary"
+    - name: "22 Build per‑VM SMBIOS summary"
+      ansible.builtin.set_fact:
+        smbios_summary: >-
+          {{
+            dict(
+              vmids | zip(
+                qm_cfg_per_vm.results
+                | map(attribute='stdout_lines')
+                | map('select','match','^smbios1:')
+                | map('list')
+              )
+            )
+          }}
+
+    - name: "23 Show SMBIOS summary (smbios1 lines)"
       ansible.builtin.debug:
-        var: vm_smbios_info
+        var: smbios_summary
 
-    - name: "19 Collect data for report"
+    - name: "24 Collect data for report"
       ansible.builtin.set_fact:
         proxreport_data:
           storage_status: "{{ storage_status.stdout_lines }}"
@@ -158,11 +141,12 @@
           memory_details: "{{ memory_details.stdout_lines }}"
           uptime: "{{ uptime.stdout }}"
           creation_date: "{{ ansible_date_time.iso8601 }}"
-          vm_list: "{{ vm_list_parsed }}"
-          vm_smbios: "{{ vm_smbios_info }}"
+          vm_list: "{{ vm_list.stdout_lines }}"
+          vmids: "{{ vmids }}"
+          smbios_summary: "{{ smbios_summary | default({}) }}"
         cacheable: true
 
-    - name: "20 Build Proxmox summary HTML"
+    - name: "25 Build Proxmox summary HTML"
       ansible.builtin.template:
         src: templates/proxmox_summary.html.j2
         dest: proxmox-summary.html
