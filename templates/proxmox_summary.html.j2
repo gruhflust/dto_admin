@@ -4,41 +4,74 @@
   <meta charset="UTF-8" />
   <title>Proxmox Summary</title>
   <style>
-    body { font-family: sans-serif; }
+    body { font-family: sans-serif; line-height: 1.4; }
     pre { background: #f4f4f4; padding: 0.5em; overflow-x: auto; }
     .section { margin-bottom: 2em; page-break-after: always; }
     .section:last-child { page-break-after: auto; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; border-bottom: 1px solid #ddd; padding: 6px 8px; }
+    th { background: #eee; }
+    .muted { color: #666; }
   </style>
 </head>
 <body>
   <p>Report generated: {{ hostvars[ansible_play_hosts[0]].proxreport_data.creation_date | default('N/A') }}</p>
 {% for host in ansible_play_hosts %}
   {% if hostvars[host].proxreport_data is defined %}
+  {% set R = hostvars[host].proxreport_data %}
   <div class="section">
     <h1>{{ hostvars[host].ansible_host | default(host) }} - {{ hostvars[host].ansible_hostname }}</h1>
-    <p>Proxmox version: {{ hostvars[host].proxreport_data.pve_version | join(', ') }}<br>
-       Uptime: {{ hostvars[host].proxreport_data.uptime }}</p>
+    <p>
+      Proxmox version: {{ R.pve_version | join(', ') }}<br>
+      Uptime: {{ R.uptime }}
+    </p>
 
     <h2>Storage</h2>
-    <pre>{{ hostvars[host].proxreport_data.storage_status | join('\n') }}</pre>
+    <pre>{{ R.storage_status | join('\n') }}</pre>
 
     <h2>Network</h2>
-    <pre>{{ hostvars[host].proxreport_data.network_config | to_nice_yaml }}</pre>
+    <pre>{{ R.network_config | to_nice_yaml }}</pre>
 
     <h2>IP addresses</h2>
-    <pre>{{ hostvars[host].proxreport_data.ip_addresses | join('\n') }}</pre>
+    <pre>{{ R.ip_addresses | join('\n') }}</pre>
 
     <h2>Block devices</h2>
-    <pre>{{ hostvars[host].proxreport_data.block_devices | join('\n') }}</pre>
+    <pre>{{ R.block_devices | join('\n') }}</pre>
 
     <h2>CPU details</h2>
-    <pre>{{ hostvars[host].proxreport_data.cpu_details | join('\n') }}</pre>
+    <pre>{{ R.cpu_details | join('\n') }}</pre>
 
     <h2>Memory details</h2>
-    <pre>{{ hostvars[host].proxreport_data.memory_details | join('\n') }}</pre>
+    <pre>{{ R.memory_details | join('\n') }}</pre>
 
     <h2>Virtual machines</h2>
-    <pre>{{ hostvars[host].proxreport_data.vm_list | join('\n') }}</pre>
+    <pre>{{ R.vm_list | join('\n') }}</pre>
+
+    {% if R.vm_smbios is defined and (R.vm_smbios | length) > 0 %}
+    <h2>VM SMBIOS</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>VMID</th>
+          <th>Name</th>
+          <th>Manufacturer</th>
+          <th>Product</th>
+          <th>UUID</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for vm in R.vm_smbios %}
+        <tr>
+          <td>{{ vm.vmid }}</td>
+          <td>{{ vm.name | default('') }}</td>
+          <td>{{ vm.manufacturer | default('') }}</td>
+          <td>{{ vm.product | default('') }}</td>
+          <td class="muted">{{ vm.uuid | default('') }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
   </div>
   {% endif %}
 {% endfor %}
