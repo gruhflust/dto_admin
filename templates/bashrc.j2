@@ -18,3 +18,4 @@ alias proxstoragedestroy='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml 
 alias proxinvoke='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml ANSIBLE_CALLBACKS_ENABLED=profile_tasks ansible-playbook -i inventory/hosts.ini dto_proxinvoke.yml'
 alias proxrevoke='ANSIBLE_FORCE_COLOR=true ANSIBLE_STDOUT_CALLBACK=yaml ANSIBLE_CALLBACKS_ENABLED=profile_tasks ansible-playbook -i inventory/hosts.ini dto_proxrevoke.yml'
 
+    alias codedump='for i in $(find . -type f | grep -vE '\''Docker|wall'\'' | grep -E '\''py$|yml$|j2$|md$|hosts|sh$|cfg$'\''); do echo $i >> ~/code.md; cat $i >> ~/code.md; done'
