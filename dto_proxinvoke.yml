@@ -2,7 +2,6 @@
 - name: Create Proxmox virtual machines
   hosts: proxmox
   gather_facts: true
-
   tasks:
     - name: "01 Verify host availability"
       ansible.builtin.ping:
@@ -47,18 +46,6 @@
       register: qm_list
       changed_when: false
 
-    - name: "07b Build SMBIOS1 argument"
-      ansible.builtin.set_fact:
-        smbios1_arg: >-
-          {{
-            (
-              ['uuid=' ~ proxinvoke.smbios1.uuid] +
-              (['manufacturer=' ~ proxinvoke.smbios1.manufacturer] if (proxinvoke.smbios1.manufacturer is defined and proxinvoke.smbios1.manufacturer|length > 0) else []) +
-              (['product=' ~ proxinvoke.smbios1.product]           if (proxinvoke.smbios1.product is defined and proxinvoke.smbios1.product|length > 0) else [])
-            ) | join(',')
-          }}
-      when: proxinvoke.smbios1 is defined
-
     - name: "08 Create VM"
       ansible.builtin.command: >-
         qm create {{ proxinvoke.vmid }}
@@ -66,7 +53,9 @@
         --memory {{ proxinvoke.memory }}
         --cores {{ proxinvoke.cores }}
         --net0 {{ proxinvoke.networks[0] }}
-        {% if proxinvoke.smbios1 is defined %} --smbios1 "{{ smbios1_arg }}" {% endif %}
+        {% if proxinvoke.smbios1 is defined %}
+        --smbios1 "uuid={{ proxinvoke.smbios1.uuid }},manufacturer={{ proxinvoke.smbios1.manufacturer | quote }},product={{ proxinvoke.smbios1.product | quote }}"
+        {% endif %}
       when: proxinvoke.vmid|string not in qm_list.stdout
 
     - name: "09 Configure disk"
@@ -75,10 +64,10 @@
         --scsi0 {{ proxinvoke.storage }}:{{ proxinvoke.disk_size | regex_replace('[^0-9]', '') | int }},discard=on
       when: proxinvoke.vmid|string not in qm_list.stdout
 
-    - name: "10 Set/Update SMBIOS parameters"
+    - name: "10 Set SMBIOS parameters"
       ansible.builtin.command: >-
         qm set {{ proxinvoke.vmid }}
-        --smbios1 "{{ smbios1_arg }}"
+        --smbios1 "uuid={{ proxinvoke.smbios1.uuid }},manufacturer={{ proxinvoke.smbios1.manufacturer | quote }},product={{ proxinvoke.smbios1.product | quote }}"
       when: proxinvoke.smbios1 is defined
 
     - name: "11 Check VM status"
