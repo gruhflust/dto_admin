@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Proxmox Summary</title>
+  <style>
+    body { font-family: sans-serif; line-height: 1.4; }
+    pre { background: #f4f4f4; padding: 0.5em; overflow-x: auto; }
+    .section { margin-bottom: 2em; page-break-after: always; }
+    .section:last-child { page-break-after: auto; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; border-bottom: 1px solid #ddd; padding: 6px 8px; }
+    th { background: #eee; }
+    .muted { color: #666; }
+  </style>
+</head>
+<body>
+  <p>Report generated: 2025-08-14T17:57:14Z</p>
+      <div class="section">
+    <h1>192.168.188.150 - pve</h1>
+    <p>
+      Proxmox version: pve-manager/9.0.3/025864202ebb6109 (running kernel: 6.14.8-2-pve)<br>
+      Uptime: up 11 hours, 55 minutes
+    </p>
+
+    <h2>Storage</h2>
+    <pre>Name               Type     Status           Total            Used       Available        %
+dto-lvmthin     lvmthin     active        30846976               0        30846976    0.00%
+local               dir     active        12822812         3525780         8623856   27.50%
+local-lvm       lvmthin     active        11034624               0        11034624    0.00%</pre>
+
+    <h2>Network</h2>
+    <pre>-   active: 1
+    altnames:
+    - enx0800275076b2
+    exists: 1
+    families:
+    - inet
+    iface: enp0s3
+    method: manual
+    method6: manual
+    priority: 3
+    type: eth
+-   active: 1
+    address: 192.168.188.150
+    autostart: 1
+    bridge_fd: '0'
+    bridge_ports: enp0s3
+    bridge_stp: 'off'
+    cidr: 192.168.188.150/24
+    families:
+    - inet
+    gateway: 192.168.188.1
+    iface: vmbr0
+    method: static
+    method6: manual
+    netmask: '24'
+    priority: 4
+    type: bridge
+</pre>
+
+    <h2>IP addresses</h2>
+    <pre>1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+1: lo    inet6 ::1/128 scope host noprefixroute \       valid_lft forever preferred_lft forever
+3: vmbr0    inet 192.168.188.150/24 scope global vmbr0\       valid_lft forever preferred_lft forever
+3: vmbr0    inet6 fe80::a00:27ff:fe50:76b2/64 scope link proto kernel_ll \       valid_lft forever preferred_lft forever</pre>
+
+    <h2>Block devices</h2>
+    <pre>NAME                SIZE TYPE MOUNTPOINT
+sda                29.1G disk 
+├─sda1             1007K part 
+├─sda2              512M part 
+└─sda3             28.6G part 
+  ├─pve-swap        3.5G lvm  [SWAP]
+  ├─pve-root       12.5G lvm  /
+  ├─pve-data_tmeta    1G lvm  
+  │ └─pve-data     10.5G lvm  
+  └─pve-data_tdata 10.5G lvm  
+    └─pve-data     10.5G lvm  
+sdb                29.5G disk 
+├─vg0-tp0_tmeta      32M lvm  
+│ └─vg0-tp0        29.4G lvm  
+└─vg0-tp0_tdata    29.4G lvm  
+  └─vg0-tp0        29.4G lvm  </pre>
+
+    <h2>CPU details</h2>
+    <pre>Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           46 bits physical, 48 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  4
+On-line CPU(s) list:                     0-3
+Vendor ID:                               GenuineIntel
+Model name:                              12th Gen Intel(R) Core(TM) i7-12700K
+CPU family:                              6
+Model:                                   151
+Thread(s) per core:                      1
+Core(s) per socket:                      4
+Socket(s):                               1
+Stepping:                                2
+BogoMIPS:                                7219.20
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 cx16 pcid sse4_1 sse4_2 movbe popcnt aes rdrand hypervisor lahf_lm abm 3dnowprefetch ibrs_enhanced fsgsbase bmi1 bmi2 invpcid rdseed adx clflushopt sha_ni arat md_clear flush_l1d arch_capabilities
+Hypervisor vendor:                       KVM
+Virtualization type:                     full
+L1d cache:                               192 KiB (4 instances)
+L1i cache:                               128 KiB (4 instances)
+L2 cache:                                5 MiB (4 instances)
+L3 cache:                                100 MiB (4 instances)
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-3
+Vulnerability Gather data sampling:      Not affected
+Vulnerability Ghostwrite:                Not affected
+Vulnerability Indirect target selection: Mitigation; Aligned branch/return thunks
+Vulnerability Itlb multihit:             Not affected
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Not affected
+Vulnerability Reg file data sampling:    Vulnerable: No microcode
+Vulnerability Retbleed:                  Mitigation; Enhanced IBRS
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Vulnerable
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsx async abort:           Not affected</pre>
+
+    <h2>Memory details</h2>
+    <pre>               total        used        free      shared  buff/cache   available
+Mem:           7.8Gi       1.6Gi       5.9Gi        46Mi       585Mi       6.2Gi
+Swap:          3.5Gi          0B       3.5Gi</pre>
+
+    <h2>Virtual machines</h2>
+    <pre></pre>
+
+      </div>
+        <div class="section">
+    <h1>192.168.188.94 - thirdprox</h1>
+    <p>
+      Proxmox version: pve-manager/8.4.0/ec58e45e1bcdf2ac (running kernel: 6.8.12-9-pve)<br>
+      Uptime: up 11 hours, 17 minutes
+    </p>
+
+    <h2>Storage</h2>
+    <pre>Name               Type     Status           Total            Used       Available        %
+dto-lvmthin     lvmthin     active      2147217408               0      2147217408    0.00%
+local               dir     active         8964840         2958912         5528952   33.01%
+local-lvm       lvmthin     active         7110656               0         7110656    0.00%</pre>
+
+    <h2>Network</h2>
+    <pre>-   active: 1
+    exists: 1
+    families:
+    - inet
+    iface: enp0s3
+    method: manual
+    method6: manual
+    priority: 3
+    type: eth
+-   active: 1
+    address: 192.168.188.94
+    autostart: 1
+    bridge_fd: '0'
+    bridge_ports: enp0s3
+    bridge_stp: 'off'
+    cidr: 192.168.188.94/24
+    families:
+    - inet
+    gateway: 192.168.188.1
+    iface: vmbr0
+    method: static
+    method6: manual
+    netmask: '24'
+    priority: 4
+    type: bridge
+</pre>
+
+    <h2>IP addresses</h2>
+    <pre>1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+1: lo    inet6 ::1/128 scope host noprefixroute \       valid_lft forever preferred_lft forever
+3: vmbr0    inet 192.168.188.94/24 scope global vmbr0\       valid_lft forever preferred_lft forever
+3: vmbr0    inet6 fe80::a00:27ff:fec0:bc16/64 scope link \       valid_lft forever preferred_lft forever</pre>
+
+    <h2>Block devices</h2>
+    <pre>NAME                SIZE TYPE MOUNTPOINT
+sda                  20G disk 
+├─sda1             1007K part 
+├─sda2              512M part 
+└─sda3             19.5G part 
+  ├─pve-swap        1.9G lvm  [SWAP]
+  ├─pve-root        8.8G lvm  /
+  ├─pve-data_tmeta    1G lvm  
+  │ └─pve-data      6.8G lvm  
+  └─pve-data_tdata  6.8G lvm  
+    └─pve-data      6.8G lvm  
+sdb                   2T disk 
+├─vg0-tp0_tmeta     128M lvm  
+│ └─vg0-tp0           2T lvm  
+└─vg0-tp0_tdata       2T lvm  
+  └─vg0-tp0           2T lvm  
+sr0                 1.5G rom  </pre>
+
+    <h2>CPU details</h2>
+    <pre>Architecture:                         x86_64
+CPU op-mode(s):                       32-bit, 64-bit
+Address sizes:                        46 bits physical, 48 bits virtual
+Byte Order:                           Little Endian
+CPU(s):                               1
+On-line CPU(s) list:                  0
+Vendor ID:                            GenuineIntel
+Model name:                           12th Gen Intel(R) Core(TM) i7-12700K
+BIOS Model name:                        CPU @ 0.0GHz
+BIOS CPU family:                      0
+CPU family:                           6
+Model:                                151
+Thread(s) per core:                   1
+Core(s) per socket:                   1
+Socket(s):                            1
+Stepping:                             2
+BogoMIPS:                             7219.20
+Flags:                                fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid tsc_known_freq pni pclmulqdq ssse3 cx16 pcid sse4_1 sse4_2 movbe popcnt aes rdrand hypervisor lahf_lm abm 3dnowprefetch ibrs_enhanced fsgsbase bmi1 bmi2 invpcid rdseed adx clflushopt sha_ni arat md_clear flush_l1d arch_capabilities
+Hypervisor vendor:                    KVM
+Virtualization type:                  full
+L1d cache:                            48 KiB (1 instance)
+L1i cache:                            32 KiB (1 instance)
+L2 cache:                             1.3 MiB (1 instance)
+L3 cache:                             25 MiB (1 instance)
+NUMA node(s):                         1
+NUMA node0 CPU(s):                    0
+Vulnerability Gather data sampling:   Not affected
+Vulnerability Itlb multihit:          Not affected
+Vulnerability L1tf:                   Not affected
+Vulnerability Mds:                    Not affected
+Vulnerability Meltdown:               Not affected
+Vulnerability Mmio stale data:        Not affected
+Vulnerability Reg file data sampling: Vulnerable: No microcode
+Vulnerability Retbleed:               Mitigation; Enhanced IBRS
+Vulnerability Spec rstack overflow:   Not affected
+Vulnerability Spec store bypass:      Vulnerable
+Vulnerability Spectre v1:             Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:             Mitigation; Enhanced / Automatic IBRS; RSB filling; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                  Not affected
+Vulnerability Tsx async abort:        Not affected</pre>
+
+    <h2>Memory details</h2>
+    <pre>               total        used        free      shared  buff/cache   available
+Mem:           1.9Gi       1.3Gi       442Mi        43Mi       375Mi       623Mi
+Swap:          1.9Gi          0B       1.9Gi</pre>
+
+    <h2>Virtual machines</h2>
+    <pre></pre>
+
+      </div>
+  </body>
+</html>
