@@ -1,8 +1,8 @@
 ---
-# dto_proxinvoke.yml — v0.1.2
-#  - Set SMBIOS (uuid, manufacturer, product) via --smbios1 only
-#  - Avoid quotes inside SMBIOS values to satisfy Proxmox regex
-#  - Build argv lists via set_fact; no Jinja blocks inside YAML lists
+# dto_proxinvoke.yml — v0.1.3
+# - Set SMBIOS (uuid, manufacturer, product) via --smbios1 only
+# - Build argv cleanly; avoid quotes in SMBIOS values to satisfy Proxmox regex
+# - No Jinja blocks inside YAML lists; use reject('equalto','') to drop empties
 
 - name: Create Proxmox virtual machines
   hosts: proxmox
@@ -53,24 +53,30 @@
       changed_when: false
 
     # ---------- SMBIOS handling ----------
-    # Build a single comma-separated --smbios1 string:
-    #   uuid=...,manufacturer=Dell Inc.,product=PowerEdge R730
-    - name: "07b Build SMBIOS1 argument"
+    - name: "07b Build SMBIOS1 key=value list (with empties)"
       ansible.builtin.set_fact:
-        smbios1_arg: >-
-          {{ ['uuid=' ~ proxinvoke.smbios1.uuid]
-             + (
-                 proxinvoke.smbios1.manufacturer is defined and proxinvoke.smbios1.manufacturer|length > 0
-                 | ternary(['manufacturer=' ~ proxinvoke.smbios1.manufacturer], [])
-               )
-             + (
-                 proxinvoke.smbios1.product is defined and proxinvoke.smbios1.product|length > 0
-                 | ternary(['product=' ~ proxinvoke.smbios1.product], [])
-               )
-             | join(',') }}
+        smbios1_list_raw:
+          - "uuid={{ proxinvoke.smbios1.uuid }}"
+          - "{{ 'manufacturer=' ~ proxinvoke.smbios1.manufacturer
+                if (proxinvoke.smbios1 is defined
+                    and proxinvoke.smbios1.manufacturer is defined
+                    and (proxinvoke.smbios1.manufacturer | string) | length > 0)
+                else '' }}"
+          - "{{ 'product=' ~ proxinvoke.smbios1.product
+                if (proxinvoke.smbios1 is defined
+                    and proxinvoke.smbios1.product is defined
+                    and (proxinvoke.smbios1.product | string) | length > 0)
+                else '' }}"
       when: proxinvoke.smbios1 is defined
+      changed_when: false
 
-    - name: "07c Build command argv lists"
+    - name: "07c Collapse SMBIOS1 argument"
+      ansible.builtin.set_fact:
+        smbios1_arg: "{{ smbios1_list_raw | reject('equalto','') | list | join(',') }}"
+      when: proxinvoke.smbios1 is defined
+      changed_when: false
+
+    - name: "07d Build base argv lists"
       ansible.builtin.set_fact:
         create_base_argv:
           - qm
@@ -132,4 +138,4 @@
 
     - name: "14 Show smbios1 line"
       ansible.builtin.debug:
-        msg: "{{ (qm_cfg.stdout_lines | select('search', '^smbios1:') | list) | first | default('smbios1: <not found>') }}"
+        msg: "{{ (qm_cfg.stdout_lines | select('match', '^smbios1:') | list | first) | default('smbios1: <not found>') }}"
