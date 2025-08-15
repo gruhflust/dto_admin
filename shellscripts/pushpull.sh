@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Build & send dto_admin.tgz from Host1 -> (Jump) -> Host3 using scp
 # Run on Host1. Uses user 'olr' für die SSH-Verbindungen.
+# einmalig (falls Datei aus Windows kommt): Zeilenenden sichern
+# sed -i 's/\r$//' /home/doeto111-misc/deployrepo_min.sh
 
 set -euo pipefail
 
