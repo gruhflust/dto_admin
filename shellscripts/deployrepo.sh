@@ -1,95 +1,105 @@
 #!/usr/bin/env bash
-# copy_dto_admin_direct.sh
-# Zweck: Von HOST1 (dieser Rechner) direkt zu HOST3 streamen (kein Staging),
-#        über einen oder mehrere SSH-Hops (ProxyJump), nur mit tar/ssh.
-# Ausführen auf: HOST1
-# Voraussetzung: SSH-Key-Login als 'olr' von HOST1 -> Hops -> HOST3.
-# Hinweis: rsync wird NICHT benötigt. Nur tar & ssh auf den beteiligten Hosts.
-
+# -----------------------------------------------------------------------------
+# deployrepo.sh  —  Direct copy Host1 -> Host3 via Host2 using tar|ssh|tar
+# Run on: Host1
+# User:    olr (auf allen Hosts vorhanden)
+# Copy:    /usr/local/drives/doeto111-misc/C:/temp/dto_admin  ->  Host3:/home/olr/dto_admin
+# Hops:    ProxyJump über IP(s), keine Namensauflösung nötig
+# -----------------------------------------------------------------------------
 set -euo pipefail
 
-### ========= KONFIGURATION (ANPASSEN) ==========================================
+### ====== [CONFIG] IPs, Pfade, Optionen anpassen ===============================
 USER_NAME="olr"
 
-# Ziel (HOST3) – IP-Adresse
-TARGET_IP="10.10.81.241"          # <-- IP vom Zielhost (Bild 3)
+# Zielhost (Host3)
+TARGET_IP="10.10.81.241"          # <-- IP aus deinem Bild 3
 
-# Hops (HOST2 …) – IP-Kette, kommasepariert. Beispiel für 2 Hops: "10.1.2.3,10.4.5.6"
-# Für einen Hop einfach eine IP setzen, für keinen Hop leer lassen (nicht dein Fall).
-JUMP_CHAIN="10.10.81.231"         # <-- IP vom Zwischenhost (Bild 2)
+# Zwischenhost-Kette (Host2, mehrere Hops per Komma)
+JUMP_CHAIN="10.10.81.231"         # <-- IP aus deinem Bild 2; mehrere: "IP1,IP2"
 
-# Quelle (auf HOST1)
+# Quelle (Host1 – dieser Rechner)
 SRC_DIR="/usr/local/drives/doeto111-misc/C:/temp/dto_admin"
 
-# Zielpfad (auf HOST3)
+# Zielpfad auf Host3
 DST_DIR="/home/olr/dto_admin"
 
-# Optional: Testlauf ohne Schreiben
+# Dry-Run nur anzeigen (true/false)
 DRY_RUN=false
 
-# Excludes (werden NICHT übertragen)
+# Zu ignorierende Dateien/Ordner
 EXCLUDES=(
   ".git/"
   "*.pyc"
   ".DS_Store"
   "Thumbs.db"
 )
-### ========= ENDE KONFIGURATION ===============================================
+### ====== [/CONFIG] ============================================================
 
-# -- Hilfsfunktionen -----------------------------------------------------------
-join_by() { local IFS="$1"; shift; echo "$*"; }
+# ---- Logging helpers ----------------------------------------------------------
+log() { printf '[*] %s\n' "$*"; }
+ok()  { printf '[+] %s\n' "$*"; }
+err() { printf '[!] %s\n' "$*" >&2; }
 
-build_proxyjump_opt() {
-  # Baut die -o ProxyJump=... Option aus der IP-Kette
-  if [[ -z "${JUMP_CHAIN}" ]]; then
-    echo ""
-  else
-    local hops=()
-    IFS=',' read -r -a hops <<< "${JUMP_CHAIN}"
-    local with_user=()
-    for ip in "${hops[@]}"; do
-      with_user+=("${USER_NAME}@${ip}")
-    done
-    echo "-o ProxyJump=$(join_by , "${with_user[@]}")"
-  fi
-}
-
-# -- Vorbereitungen ------------------------------------------------------------
+# ---- Vorab-Checks -------------------------------------------------------------
+# 1) Häufiger Tippfehler /urs vs /usr
 if [[ ! -d "$SRC_DIR" ]]; then
-  echo "Quelle nicht gefunden: $SRC_DIR" >&2
+  if [[ "$SRC_DIR" == /urs/* ]]; then
+    err "Pfad beginnt mit /urs/... — meintest du /usr/... ?"
+  fi
+  err "Quelle nicht gefunden: $SRC_DIR"
   exit 1
 fi
 
-PARENT_DIR="$(dirname "$SRC_DIR")"
-BASE_NAME="$(basename "$SRC_DIR")"
+# 2) Tools
+command -v ssh >/dev/null 2>&1 || { err "ssh fehlt"; exit 1; }
+command -v tar >/dev/null 2>&1 || { err "tar fehlt"; exit 1; }
 
-# tar --exclude Parameter bauen
+# 3) ProxyJump-Option aus IP-Kette bauen
+build_proxyjump_opt() {
+  if [[ -z "${JUMP_CHAIN}" ]]; then
+    echo ""
+  else
+    local hops with_user=()
+    IFS=',' read -r -a hops <<< "${JUMP_CHAIN}"
+    for ip in "${hops[@]}"; do
+      with_user+=("${USER_NAME}@${ip}")
+    done
+    echo "-o ProxyJump=$(IFS=,; echo "${with_user[*]}")"
+  fi
+}
+PJ_OPT="$(build_proxyjump_opt)"
+
+# 4) Zielverzeichnis vorbereiten
+log "Erzeuge Zielpfad auf ${TARGET_IP}: ${DST_DIR}"
+if $DRY_RUN; then
+  echo "ssh ${PJ_OPT:+$PJ_OPT }${USER_NAME}@${TARGET_IP} mkdir -p '$(printf %q "$DST_DIR")'"
+else
+  ssh ${PJ_OPT:+$PJ_OPT } "${USER_NAME}@${TARGET_IP}" "mkdir -p '$(printf %q "$DST_DIR")'"
+fi
+ok "SSH-Verbindung/Hop-Kette ok."
+
+# ---- Transfer vorbereiten -----------------------------------------------------
+PARENT_DIR="$(dirname "$SRC_DIR")"  # /usr/local/drives/doeto111-misc/C:/temp
+BASE_NAME="$(basename "$SRC_DIR")"  # dto_admin
+
+# Excludes für tar
 TAR_EXCLUDES=()
 for e in "${EXCLUDES[@]}"; do
   TAR_EXCLUDES+=( "--exclude=$e" )
 done
 
-# ProxyJump-Option
-PJ_OPT="$(build_proxyjump_opt)"
-
-# -- Ziel vorbereiten (Remote-Verzeichnis anlegen) -----------------------------
-echo "[*] Prüfe/erstelle Zielverzeichnis auf ${TARGET_IP}: ${DST_DIR}"
-if $DRY_RUN; then
-  echo "ssh ${PJ_OPT:+$PJ_OPT }${USER_NAME}@${TARGET_IP} \"mkdir -p '$(printf %q "$DST_DIR")'\""
-else
-  ssh ${PJ_OPT:+$PJ_OPT } "${USER_NAME}@${TARGET_IP}" "mkdir -p '$(printf %q "$DST_DIR")'"
-fi
-
-# -- Transfer: tar (Quelle) -> ssh (Hops) -> tar (Ziel) ------------------------
-echo "[*] Starte Stream von HOST1 → (${JUMP_CHAIN}) → ${TARGET_IP}"
-echo "[*] Excludes: ${EXCLUDES[*]:-(keine)}"
+# ---- Start Transfer (tar -> ssh -> tar) --------------------------------------
+log "Starte Stream Host1 -> (${JUMP_CHAIN:-kein Hop}) -> ${TARGET_IP}"
+log "Excludes: ${EXCLUDES[*]:-(keine)}"
 
 if $DRY_RUN; then
-  echo "tar -C '$(printf %q "$PARENT_DIR")' -cpf - '$(printf %q "$BASE_NAME")' ${TAR_EXCLUDES[*]} \
-| ssh ${PJ_OPT:+$PJ_OPT } ${USER_NAME}@${TARGET_IP} \"tar -xpf - -C '$(printf %q "$DST_DIR")'\""
+  cat <<EOF
+tar -C '$(printf %q "$PARENT_DIR")' -cpf - '$(printf %q "$BASE_NAME")' ${TAR_EXCLUDES[*]} \
+| ssh ${PJ_OPT:+$PJ_OPT } ${USER_NAME}@${TARGET_IP} "tar -xpf - -C '$(printf %q "$DST_DIR")'"
+EOF
 else
   tar -C "$PARENT_DIR" -cpf - "$BASE_NAME" "${TAR_EXCLUDES[@]}" \
   | ssh ${PJ_OPT:+$PJ_OPT } "${USER_NAME}@${TARGET_IP}" "tar -xpf - -C '$(printf %q "$DST_DIR")'"
 fi
 
-echo "[✓] Transfer abgeschlossen: ${TARGET_IP}:${DST_DIR}"
+ok "Transfer abgeschlossen: ${TARGET_IP}:${DST_DIR}"
