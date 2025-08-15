@@ -1,9 +1,4 @@
 ---
-# dto_proxinvoke.yml — v0.1.3
-# - Set SMBIOS (uuid, manufacturer, product) via --smbios1 only
-# - Build argv cleanly; avoid quotes in SMBIOS values to satisfy Proxmox regex
-# - No Jinja blocks inside YAML lists; use reject('equalto','') to drop empties
-
 - name: Create Proxmox virtual machines
   hosts: proxmox
   gather_facts: true
@@ -52,76 +47,40 @@
       register: qm_list
       changed_when: false
 
-    # ---------- SMBIOS handling ----------
-    - name: "07b Build SMBIOS1 key=value list (with empties)"
+    - name: "07b Build SMBIOS1 argument"
       ansible.builtin.set_fact:
-        smbios1_list_raw:
-          - "uuid={{ proxinvoke.smbios1.uuid }}"
-          - "{{ 'manufacturer=' ~ proxinvoke.smbios1.manufacturer
-                if (proxinvoke.smbios1 is defined
-                    and proxinvoke.smbios1.manufacturer is defined
-                    and (proxinvoke.smbios1.manufacturer | string) | length > 0)
-                else '' }}"
-          - "{{ 'product=' ~ proxinvoke.smbios1.product
-                if (proxinvoke.smbios1 is defined
-                    and proxinvoke.smbios1.product is defined
-                    and (proxinvoke.smbios1.product | string) | length > 0)
-                else '' }}"
+        smbios1_arg: >-
+          {{
+            (
+              ['uuid=' ~ proxinvoke.smbios1.uuid] +
+              (['manufacturer=' ~ proxinvoke.smbios1.manufacturer] if (proxinvoke.smbios1.manufacturer is defined and proxinvoke.smbios1.manufacturer|length > 0) else []) +
+              (['product=' ~ proxinvoke.smbios1.product]           if (proxinvoke.smbios1.product is defined and proxinvoke.smbios1.product|length > 0) else [])
+            ) | join(',')
+          }}
       when: proxinvoke.smbios1 is defined
-      changed_when: false
 
-    - name: "07c Collapse SMBIOS1 argument"
-      ansible.builtin.set_fact:
-        smbios1_arg: "{{ smbios1_list_raw | reject('equalto','') | list | join(',') }}"
-      when: proxinvoke.smbios1 is defined
-      changed_when: false
-
-    - name: "07d Build base argv lists"
-      ansible.builtin.set_fact:
-        create_base_argv:
-          - qm
-          - create
-          - "{{ proxinvoke.vmid }}"
-          - --name
-          - "{{ proxinvoke.name }}"
-          - --memory
-          - "{{ proxinvoke.memory }}"
-          - --cores
-          - "{{ proxinvoke.cores }}"
-          - --net0
-          - "{{ proxinvoke.networks[0] }}"
-        smbios1_pair: "{{ (proxinvoke.smbios1 is defined) | ternary(['--smbios1', smbios1_arg], []) }}"
-      changed_when: false
-
-    # ---------- Create VM ----------
     - name: "08 Create VM"
-      ansible.builtin.command:
-        argv: "{{ create_base_argv + smbios1_pair }}"
+      ansible.builtin.command: >-
+        qm create {{ proxinvoke.vmid }}
+        --name {{ proxinvoke.name }}
+        --memory {{ proxinvoke.memory }}
+        --cores {{ proxinvoke.cores }}
+        --net0 {{ proxinvoke.networks[0] }}
+        {% if proxinvoke.smbios1 is defined %} --smbios1 "{{ smbios1_arg }}" {% endif %}
       when: proxinvoke.vmid|string not in qm_list.stdout
 
-    # ---------- Disk ----------
     - name: "09 Configure disk"
-      ansible.builtin.command:
-        argv:
-          - qm
-          - set
-          - "{{ proxinvoke.vmid }}"
-          - --scsi0
-          - "{{ proxinvoke.storage }}:{{ proxinvoke.disk_size | regex_replace('[^0-9]', '') | int }},discard=on"
+      ansible.builtin.command: >-
+        qm set {{ proxinvoke.vmid }}
+        --scsi0 {{ proxinvoke.storage }}:{{ proxinvoke.disk_size | regex_replace('[^0-9]', '') | int }},discard=on
       when: proxinvoke.vmid|string not in qm_list.stdout
 
-    # ---------- SMBIOS re-apply (idempotent) ----------
-    - name: "10 Set SMBIOS parameters"
-      ansible.builtin.command:
-        argv:
-          - qm
-          - set
-          - "{{ proxinvoke.vmid }}"
-          - --smbios1
-          - "{{ smbios1_arg }}"
+    - name: "10 Set/Update SMBIOS parameters"
+      ansible.builtin.command: >-
+        qm set {{ proxinvoke.vmid }}
+        --smbios1 "{{ smbios1_arg }}"
       when: proxinvoke.smbios1 is defined
 
-    # ---------- Status / Verification ----------
     - name: "11 Check VM status"
       ansible.builtin.command: "qm status {{ proxinvoke.vmid }}"
       register: vm_status
@@ -130,12 +89,3 @@
     - name: "12 Display VM status"
       ansible.builtin.debug:
         var: vm_status.stdout_lines
-
-    - name: "13 Verify SMBIOS in config"
-      ansible.builtin.command: "qm config {{ proxinvoke.vmid }}"
-      register: qm_cfg
-      changed_when: false
-
-    - name: "14 Show smbios1 line"
-      ansible.builtin.debug:
-        msg: "{{ (qm_cfg.stdout_lines | select('match', '^smbios1:') | list | first) | default('smbios1: <not found>') }}"
